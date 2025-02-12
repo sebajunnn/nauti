@@ -1,15 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import type { SpiralSquare } from "@/types/spiral";
+import type { SpiralSquare, Vector } from "@/types/spiral";
 import { SpiralSquareComponent } from "./SpiralSquareComponent";
 import { cn } from "@/lib/utils";
-import { animate } from "framer-motion";
-
-interface Vector {
-    x: number;
-    y: number;
-}
 
 export default function GoldenSpiral({ className }: { className?: string }) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -19,7 +13,6 @@ export default function GoldenSpiral({ className }: { className?: string }) {
     const rafRef = useRef<number>(1);
     const lastWheelTime = useRef(0);
     const [offset, setOffset] = useState({ x: 0, y: 0 });
-    const [lastPos, setLastPos] = useState({ x: 0, y: 0 });
     const [squares, setSquares] = useState<SpiralSquare[]>([]);
     const squaresRef = useRef<SpiralSquare[]>([]);
     const outerSquareCount = 6;
@@ -164,14 +157,36 @@ export default function GoldenSpiral({ className }: { className?: string }) {
         ctx.lineWidth = 0.5 / scale;
         ctx.strokeStyle = "white";
 
-        // Draw squares relative to center
+        // Draw squares and arcs
         currentSquares.forEach((square, index) => {
             const x = square.x * baseSize;
             const y = square.y * baseSize;
             const size = square.size * baseSize;
+
+            // Draw square
+            ctx.strokeStyle = "white";
             ctx.strokeRect(x, y, size, size);
 
-            // Mark the starting square
+            // Draw circle inside square
+            ctx.beginPath();
+            ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
+            if (index === startingSquraeIndex) {
+                ctx.fillStyle = "red";
+            } else {
+                ctx.fillStyle = "rgba(200, 0, 0, 0.4)";
+            }
+            ctx.fill();
+
+            // Add square number
+            ctx.save();
+            ctx.fillStyle = "white";
+            ctx.font = `${Math.min(size / 3, 16) / scale}px sans-serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(square.id.toString(), x + size / 2, y + size / 2);
+            ctx.restore();
+
+            // Shade starting square
             if (index === startingSquraeIndex && zoomDepth === 0) {
                 ctx.save();
                 ctx.fillStyle = "rgba(0, 0, 255, 0.2)";
@@ -182,27 +197,21 @@ export default function GoldenSpiral({ className }: { className?: string }) {
                 ctx.font = `${12 / scale}px sans-serif`;
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
-                ctx.fillText("Starting Square", x + size / 2, y + size / 2);
+                ctx.fillText("Starting Square", x + size / 2, y + size / 2 - 25);
                 ctx.restore();
             }
-        });
 
-        // Draw arcs
-        currentSquares.forEach((square, i) => {
-            if (i === 0) return;
-            const prev = currentSquares[i - 1];
-            drawArc(ctx, square, prev, baseSize);
+            // Draw arc for each square except the first
+            if (index > 0) {
+                ctx.strokeStyle = "grey";
+                drawArc(ctx, square, baseSize);
+            }
         });
 
         ctx.restore();
     };
 
-    const drawArc = (
-        ctx: CanvasRenderingContext2D,
-        square: SpiralSquare,
-        prev: SpiralSquare,
-        baseSize: number
-    ) => {
+    const drawArc = (ctx: CanvasRenderingContext2D, square: SpiralSquare, baseSize: number) => {
         const x = square.x * baseSize;
         const y = square.y * baseSize;
         const size = square.size * baseSize;
