@@ -1,36 +1,92 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Blocks For Sale
 
-## Getting Started
+A decentralized marketplace for buying and selling blocks built with Next.js, Tailwind CSS, shadcn/ui, and smart contracts.
 
-First, run the development server:
+## Prerequisites
 
+Before you begin, ensure you have installed:
+- [Node.js](https://nodejs.org/) (v18.x or higher)
+- [pnpm](https://pnpm.io/) (v8.x or higher)
+- [Git](https://git-scm.com/)
+
+## 🚀 Quick Start
+
+1. Clone the repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/your-username/blocks-for-sale.git
+cd blocks-for-sale
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
+```bash
+pnpm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Start local hardhat node:
+```bash
+pnpm contracts:chain
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Start the development environment:
 
-## Learn More
+```bash
+# Start the Next.js frontend
+pnpm dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+The app should now be running on [http://localhost:3000](http://localhost:3000)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📁 Project Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+blocks-for-sale/
+├── packages/
+│   ├── nextjs/                 # Next.js frontend application
+│   │   ├── components/         # React components
+│   │   ├── hooks/             # Custom React hooks
+│   │   ├── pages/             # Next.js pages
+│   │   └── styles/            # Global styles and Tailwind CSS config
+│   └── hardhat/               # Smart contract development environment
+├── pnpm-workspace.yaml        # Workspace configuration
+└── package.json              # Root package.json
+```
 
-## Deploy on Vercel
+## 🛠 Development
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Frontend Development
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The frontend is built with:
+- Next.js 13 (App Router)
+- TypeScript
+- Tailwind CSS
+- shadcn/ui
+- wagmi/viem for Web3 interactions
+
+To start the frontend in development mode:
+```bash
+pnpm dev
+```
+
+### Smart Contract Development
+
+Smart contracts are developed using Hardhat. To work with contracts:
+
+```bash
+# Deploy contracts
+pnpm contracts:deploy
+```
+
+## 📚 Additional Documentation
+
+- [Frontend Documentation](./packages/nextjs/README.md)
+- [Smart Contract Documentation](./packages/contracts/README.md)
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [Scaffold-ETH 2](https://github.com/scaffold-eth/scaffold-eth-2)
+- [shadcn/ui](https://ui.shadcn.com/)
+- [wagmi](https://wagmi.sh/)
