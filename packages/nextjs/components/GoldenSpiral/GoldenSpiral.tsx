@@ -116,11 +116,20 @@ export default function GoldenSpiral({ className }: { className?: string }) {
 
     const setup = () => {
         const res = getCanvasContext();
-        if (!res) return;
+        if (!res) {
+            console.log("Setup failed: No canvas context");
+            return;
+        }
         const { canvas, ctx } = res;
 
-        const dpr = window.devicePixelRatio || 1;
+        // Add dimension checks
         const rect = canvas.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) {
+            console.log("Setup failed: Canvas has no dimensions", rect);
+            return;
+        }
+
+        const dpr = window.devicePixelRatio || 1;
         canvas.width = rect.width * dpr;
         canvas.height = rect.height * dpr;
         ctx.scale(dpr, dpr);
@@ -132,7 +141,7 @@ export default function GoldenSpiral({ className }: { className?: string }) {
         setBaseSize(baseSize);
         setSquares(newSquares);
 
-        // draw(ctx, canvas, newSquares);
+        draw(ctx, canvas, newSquares);
     };
 
     const draw = (
@@ -140,7 +149,13 @@ export default function GoldenSpiral({ className }: { className?: string }) {
         canvas: HTMLCanvasElement,
         currentSquares: SpiralSquare[]
     ) => {
-        if (!ctx || !canvas || !currentSquares.length) return;
+        if (!drawGoldenSpiral) return;
+        if (!ctx || !canvas || !currentSquares.length) {
+            console.log("Draw skipped:", { ctx, canvas, currentSquares });
+            return;
+        }
+
+        console.log("Drawing with:", { scale, offset });
 
         ctx.clearRect(-canvas.width, -canvas.height, canvas.width * 2, canvas.height * 2);
         ctx.save();
@@ -148,7 +163,6 @@ export default function GoldenSpiral({ className }: { className?: string }) {
         const centerX = canvas.width / (2 * window.devicePixelRatio);
         const centerY = canvas.height / (2 * window.devicePixelRatio);
         const canvasHeight = canvas.height / window.devicePixelRatio;
-        // const baseSize = calculateBaseSize(canvasHeight, currentSquares[startingSquareIndex].size);
 
         // Transform sequence
         ctx.translate(centerX, centerY);
@@ -260,10 +274,18 @@ export default function GoldenSpiral({ className }: { className?: string }) {
 
     // Initial setup
     useEffect(() => {
-        setup();
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        // Give the canvas a moment to properly initialize
+        const timeoutId = setTimeout(() => {
+            setup();
+            console.log(squaresRef.current);
+        }, 0);
+
+        return () => clearTimeout(timeoutId);
     }, []); // Run once on mount
 
-    // Handle resize and redraw when scale/offset change
     useEffect(() => {
         const result = getCanvasContext();
         if (!result) return;
@@ -273,87 +295,80 @@ export default function GoldenSpiral({ className }: { className?: string }) {
             setup();
         };
 
-        // draw(ctx, canvas, squaresRef.current);
+        draw(ctx, canvas, squaresRef.current);
 
         window.addEventListener("resize", handleResize);
         return () => window.removeEventListener("resize", handleResize);
-    }, [scale, offset]);
+    }, [scale, offset, squaresRef.current]);
 
     const animateScale = useCallback(() => {
-        const animate = () => {
-            const diff = targetScale.current - scaleRef.current;
-            if (Math.abs(diff) < 0.0001) {
-                scaleRef.current = targetScale.current;
-                setScale(targetScale.current);
-                return;
-            }
-
-            // Smoother easing
-            scaleRef.current += diff * 0.1; // Increased from 0.1 to 0.15
-            setScale(scaleRef.current);
-            rafRef.current = requestAnimationFrame(animate);
-        };
-
-        cancelAnimationFrame(rafRef.current);
-        rafRef.current = requestAnimationFrame(animate);
-    }, []);
-
-    // Define handleWheel outside useEffect
-    const handleWheel = useCallback((e: WheelEvent) => {
-        e.preventDefault();
-
-        // Throttle wheel events
-        const now = performance.now();
-        if (now - lastWheelTime.current < 16) return; // ~60fps
-        lastWheelTime.current = now;
-
-        const scaleFactor = e.deltaY > 0 ? 0.9 : 1.1;
-        const newTargetScale = targetScale.current * scaleFactor;
-
-        // Prevent zooming out past 0.75 when at depth 0
-        if (zoomDepthRef.current === 0 && newTargetScale < 0.75 && scaleFactor < 1) {
+        const diff = targetScale.current - scaleRef.current;
+        if (Math.abs(diff) < 0.0001) {
+            scaleRef.current = targetScale.current;
+            setScale(targetScale.current);
             return;
         }
 
-        // Zooming in past threshold
-        if (newTargetScale > resetThreshold) {
-            targetScale.current = newTargetScale / resetThreshold;
-            scaleRef.current = scaleRef.current / resetThreshold;
-            setScale(scale / resetThreshold);
-
-            if (scaleFactor > 1) {
-                zoomDepthRef.current++;
-                setZoomDepth(zoomDepthRef.current);
-            }
-        }
-        // Zooming out when we have depth
-        else if (newTargetScale < 1 && zoomDepthRef.current > 0) {
-            targetScale.current = newTargetScale * resetThreshold;
-            scaleRef.current = scaleRef.current * resetThreshold;
-            setScale(scale * resetThreshold);
-
-            zoomDepthRef.current--;
-            setZoomDepth(zoomDepthRef.current);
-        }
-        // Normal zooming
-        else {
-            targetScale.current = newTargetScale;
-        }
-
-        if (rafRef.current) {
-            cancelAnimationFrame(rafRef.current);
-        }
+        // Smoother easing with smaller step
+        scaleRef.current += diff * 0.1;
+        setScale(scaleRef.current);
         rafRef.current = requestAnimationFrame(animateScale);
-    }, []); // Remove scale and animateScale from dependencies
+    }, []);
 
-    // Use handleWheel in useEffect
+    // Add wheel event options
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
 
+        const handleWheel = (e: WheelEvent) => {
+            e.preventDefault();
+
+            const now = performance.now();
+            if (now - lastWheelTime.current < 16) return;
+            lastWheelTime.current = now;
+
+            const scaleFactor = e.deltaY > 0 ? 0.9 : 1.1;
+            const newTargetScale = targetScale.current * scaleFactor;
+
+            // Prevent zooming out past 0.75 when at depth 0
+            if (zoomDepthRef.current === 0 && newTargetScale < 0.75 && scaleFactor < 1) {
+                return;
+            }
+
+            // Zooming in past threshold
+            if (newTargetScale > resetThreshold) {
+                targetScale.current = newTargetScale / resetThreshold;
+                scaleRef.current = scaleRef.current / resetThreshold;
+                setScale(scale / resetThreshold);
+
+                if (scaleFactor > 1) {
+                    zoomDepthRef.current++;
+                    setZoomDepth(zoomDepthRef.current);
+                }
+            }
+            // Zooming out when we have depth
+            else if (newTargetScale < 1 && zoomDepthRef.current > 0) {
+                targetScale.current = newTargetScale * resetThreshold;
+                scaleRef.current = scaleRef.current * resetThreshold;
+                setScale(scale * resetThreshold);
+
+                zoomDepthRef.current--;
+                setZoomDepth(zoomDepthRef.current);
+            }
+            // Normal zooming
+            else {
+                targetScale.current = newTargetScale;
+            }
+
+            if (rafRef.current) {
+                cancelAnimationFrame(rafRef.current);
+            }
+            rafRef.current = requestAnimationFrame(animateScale);
+        };
+
         canvas.addEventListener("wheel", handleWheel, { passive: false });
         return () => canvas.removeEventListener("wheel", handleWheel);
-    }, [handleWheel]); // Add handleWheel as dependency
+    }, [scale]); // Add dependencies as needed
 
     // Cleanup RAF on unmount
     useEffect(() => {
@@ -375,17 +390,17 @@ export default function GoldenSpiral({ className }: { className?: string }) {
                     return;
                 }
 
-                setOffset({
-                    x: offset.x + diffX * 0.15,
-                    y: offset.y + diffY * 0.15,
-                });
+                setOffset((current) => ({
+                    x: current.x + diffX * 0.15,
+                    y: current.y + diffY * 0.15,
+                }));
 
                 requestAnimationFrame(animate);
             };
 
             requestAnimationFrame(animate);
         },
-        [offset, setOffset]
+        [offset]
     );
 
     const handleReset = () => {
@@ -410,18 +425,6 @@ export default function GoldenSpiral({ className }: { className?: string }) {
     //         );
     //     });
     // }, [squares, baseSize, scale, offset]);
-
-    // Memoize expensive calculations
-    const height = useMemo(() => canvasRef.current?.height || 0, []);
-
-    // Debounce resize handler
-    const debouncedResize = useMemo(
-        () =>
-            debounce(() => {
-                setup();
-            }, 100),
-        []
-    );
 
     return (
         <div className={cn("", className)}>

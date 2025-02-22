@@ -56,7 +56,7 @@ export function SpiralSquareContent({
                 perspective: 1000,
                 pointerEvents: "none",
                 // opacity: inView ? 1 : 0, // Fade in when visible
-                transition: "opacity 0.3s ease-in-out", // Smoother transition
+                // transition: "opacity 0.3s ease-in-out", // Smoother transition
             }}
         >
             {/* {inView && ( // Only render image when in view */}
