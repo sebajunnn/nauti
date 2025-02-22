@@ -13,7 +13,7 @@ const calculateBaseSize = (height: number, squareSize: number) =>
 
 export default function GoldenSpiral({ className }: { className?: string }) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [drawGoldenSpiral, setDrawGoldenSpiral] = useState(false);
+    const [drawGoldenSpiral, setDrawGoldenSpiral] = useState(true);
 
     const { scale, zoomDepth, offset, setScale, setZoomDepth, setOffset, reset } = useSpiralStore();
 
@@ -40,6 +40,9 @@ export default function GoldenSpiral({ className }: { className?: string }) {
     const [baseSize, setBaseSize] = useState(0);
 
     const zoomDepthRef = useRef(0);
+
+    // Add with other refs at top of component
+    const offsetAnimationRef = useRef<number | undefined>(undefined);
 
     const calculateSquares = (
         _totalCount: number,
@@ -155,14 +158,19 @@ export default function GoldenSpiral({ className }: { className?: string }) {
             return;
         }
 
-        console.log("Drawing with:", { scale, offset });
-
         ctx.clearRect(-canvas.width, -canvas.height, canvas.width * 2, canvas.height * 2);
         ctx.save();
 
         const centerX = canvas.width / (2 * window.devicePixelRatio);
         const centerY = canvas.height / (2 * window.devicePixelRatio);
         const canvasHeight = canvas.height / window.devicePixelRatio;
+
+        // Calculate vertical offset for initial view
+        const startingSquare = currentSquares[startingSquareIndex];
+        const verticalOffset =
+            zoomDepth === 0 && scale === 1
+                ? -(startingSquare.y * baseSize + (startingSquare.size * baseSize) / 2)
+                : 0;
 
         // Transform sequence
         ctx.translate(centerX, centerY);
@@ -379,52 +387,56 @@ export default function GoldenSpiral({ className }: { className?: string }) {
         };
     }, []);
 
-    const animateOffset = useCallback(
-        (targetOffset: { x: number; y: number }) => {
-            const animate = () => {
-                const diffX = targetOffset.x - offset.x;
-                const diffY = targetOffset.y - offset.y;
+    const animateOffset = useCallback((targetOffset: { x: number; y: number }) => {
+        const animate = () => {
+            setOffset((current) => {
+                const diffX = targetOffset.x - current.x;
+                const diffY = targetOffset.y - current.y;
 
                 if (Math.abs(diffX) < 0.1 && Math.abs(diffY) < 0.1) {
-                    setOffset(targetOffset);
-                    return;
+                    return targetOffset;
                 }
 
-                setOffset((current) => ({
+                offsetAnimationRef.current = requestAnimationFrame(animate);
+                return {
                     x: current.x + diffX * 0.15,
                     y: current.y + diffY * 0.15,
-                }));
+                };
+            });
+        };
 
-                requestAnimationFrame(animate);
-            };
+        if (offsetAnimationRef.current) {
+            cancelAnimationFrame(offsetAnimationRef.current);
+        }
+        animate();
+    }, []);
 
-            requestAnimationFrame(animate);
-        },
-        [offset]
-    );
+    const centerOnStartingSquare = useCallback(() => {
+        if (zoomDepth === 0 && squares.length > 0 && scale >= 1) {
+            const startingSquare = squares[startingSquareIndex];
+            const baseOffset = -(
+                startingSquare.y * baseSize +
+                (startingSquare.size * baseSize) / 2
+            );
+
+            // Ease out the offset as scale increases
+            const easeOutOffsetX = 70 * Math.exp(-(scale - 1) * 0.5);
+            const easeOutOffsetY = baseOffset * Math.exp(-(scale - 1) * 0.5);
+            animateOffset({ x: easeOutOffsetX, y: easeOutOffsetY });
+        }
+    }, [zoomDepth, scale, squares, baseSize]);
+
+    useEffect(() => {
+        centerOnStartingSquare();
+    }, [centerOnStartingSquare]);
 
     const handleReset = () => {
         zoomDepthRef.current = 0;
         targetScale.current = 1;
-        reset();
+        setScale(1);
+        setZoomDepth(0);
+        centerOnStartingSquare();
     };
-
-    // Add virtualization to only render visible squares
-    // const visibleSquares = useMemo(() => {
-    //     return squares.filter((square) => {
-    //         const size = square.size * baseSize * scale;
-    //         const x = square.x * baseSize * scale + offset.x * scale;
-    //         const y = square.y * baseSize * scale + offset.y * scale;
-
-    //         // Check if square is in viewport
-    //         return (
-    //             x + size > -window.innerWidth / 2 &&
-    //             x < window.innerWidth / 2 &&
-    //             y + size > -window.innerHeight / 2 &&
-    //             y < window.innerHeight / 2
-    //         );
-    //     });
-    // }, [squares, baseSize, scale, offset]);
 
     return (
         <div className={cn("", className)}>
@@ -436,7 +448,7 @@ export default function GoldenSpiral({ className }: { className?: string }) {
             </div>
             <button
                 onClick={handleReset}
-                className="absolute bottom-5 right-5 z-10 px-3 py-1 bg-foreground/50 hover:bg-foreground/20 
+                className="absolute bottom-7 right-7 z-10 px-3 py-1 bg-foreground/50 hover:bg-foreground/20 
                           text-foreground rounded-full transition-colors"
             >
                 Reset View
@@ -446,20 +458,7 @@ export default function GoldenSpiral({ className }: { className?: string }) {
                     ref={canvasRef}
                     className="absolute w-full h-full rounded-3xl bg-neutral-700/30 border-white"
                 />
-
-                {/* {squares.map(
-                    (square, index) =>
-                        [4, 5, 6].includes(index) && (
-                            <SpiralSquareComponent
-                                key={square.id}
-                                square={square}
-                                baseSize={baseSize}
-                                scale={scale}
-                                offset={offset}
-                            />
-                        )
-                )} */}
-                {squares.map((square, index) => (
+                {/* {squares.map((square, index) => (
                     <SpiralSquareContent
                         key={square.id}
                         square={square}
@@ -468,7 +467,7 @@ export default function GoldenSpiral({ className }: { className?: string }) {
                         offset={offset}
                         zoomDepth={zoomDepth}
                     />
-                ))}
+                ))} */}
             </div>
         </div>
     );

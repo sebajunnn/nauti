@@ -19,7 +19,7 @@ export const useSpiralStore = create<SpiralState>((set) => ({
     setZoomDepth: (depth) => set({ zoomDepth: depth }),
     setOffset: (offset) =>
         set((state) => ({
-            offset: offset instanceof Function ? offset(state.offset) : offset,
+            offset: typeof offset === "function" ? offset(state.offset) : offset,
         })),
     reset: () => set({ scale: 1, zoomDepth: 0, offset: { x: 0, y: 0 } }),
 }));
