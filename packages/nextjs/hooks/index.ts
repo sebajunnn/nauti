@@ -1,4 +1,3 @@
-export * from "./useSpiral";
 export * from "./useTargetNetwork";
 export * from "./useOutsideClick";
 export * from "./useWatchBalance";

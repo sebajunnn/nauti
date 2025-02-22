@@ -1,38 +1,52 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
-import type { SpiralSquare, Vector } from "@/types/spiral";
-import { SpiralSquareComponent } from "./SpiralSquareComponent";
-import { cn } from "@/lib/utils";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { SpiralSquareContent } from "@/components/GoldenSpiral/SpiralSquareContent";
+import { cn, debounce } from "@/lib/utils";
+import { SpiralSquare, Vector, goldenSpiralConstants } from "@/types/golden-spiral";
+import { useSpiralStore } from "@/stores/useSpiralStore";
+
+// Constants for sizing
+const BASE_SIZE_RATIO = 0.8;
+const calculateBaseSize = (height: number, squareSize: number) =>
+    (height * BASE_SIZE_RATIO) / squareSize;
 
 export default function GoldenSpiral({ className }: { className?: string }) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [scale, setScale] = useState(1);
+    const [drawGoldenSpiral, setDrawGoldenSpiral] = useState(false);
+
+    const { scale, zoomDepth, offset, setScale, setZoomDepth, setOffset, reset } = useSpiralStore();
+
     const scaleRef = useRef(1);
     const targetScale = useRef(1);
     const rafRef = useRef<number>(1);
     const lastWheelTime = useRef(0);
-    const [offset, setOffset] = useState({ x: 0, y: 0 });
+
+    // Fibonacci Calculations
+    const {
+        patternLength,
+        resetThreshold,
+        startingSquareIndex,
+        startingSquareDirection,
+        mainIterationCount,
+        outerSquareCount,
+        totalCount,
+        fibonacciSequence,
+    } = goldenSpiralConstants;
+
+    // State for golden spiral squares
     const [squares, setSquares] = useState<SpiralSquare[]>([]);
     const squaresRef = useRef<SpiralSquare[]>([]);
-    const outerSquareCount = 6;
-    const startingSquraeIndex = 4;
-    const PATTERN_LENGTH = 13;
-    // Fibonacci sequence: 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377
-    const RESET_THRESHOLD = 377; // Fibonacci(14)
-    const [zoomDepth, setZoomDepth] = useState(0);
+    const [baseSize, setBaseSize] = useState(0);
+
     const zoomDepthRef = useRef(0);
 
-    const calculateSquares = (iterations: number): SpiralSquare[] => {
+    const calculateSquares = (
+        _totalCount: number,
+        _startingSquareDirection: number
+    ): SpiralSquare[] => {
         const squares: SpiralSquare[] = [];
-
-        // Calculate Fibonacci sequence
-        let sequence = [1, 1];
-        for (let i = 0; i < iterations + outerSquareCount; i++) {
-            // Add 3 more iterations
-            sequence.push(sequence[i + 1] + sequence[i]);
-        }
-        sequence.reverse();
+        const sequence = fibonacciSequence.reverse();
 
         // Start with largest square
         squares.push({
@@ -40,7 +54,7 @@ export default function GoldenSpiral({ className }: { className?: string }) {
             x: 0,
             y: 0,
             size: sequence[0], // here
-            direction: (3 + outerSquareCount) % 4,
+            direction: _startingSquareDirection,
         });
 
         // Calculate all positions first
@@ -89,7 +103,7 @@ export default function GoldenSpiral({ className }: { className?: string }) {
         });
 
         // Return only the squares we want to display
-        return squares.slice(squares.length - iterations);
+        return squares.slice(squares.length - mainIterationCount);
     };
 
     const getCanvasContext = useCallback(() => {
@@ -110,12 +124,15 @@ export default function GoldenSpiral({ className }: { className?: string }) {
         canvas.width = rect.width * dpr;
         canvas.height = rect.height * dpr;
         ctx.scale(dpr, dpr);
-        // Match initial iterations with first scroll state
-        const initialIterations = 9 + 4;
-        const newSquares = calculateSquares(13);
+
+        const newSquares = calculateSquares(totalCount, startingSquareDirection);
+        const baseSize = calculateBaseSize(canvas.height, newSquares[startingSquareIndex].size);
+
         squaresRef.current = newSquares;
+        setBaseSize(baseSize);
         setSquares(newSquares);
-        draw(ctx, canvas, newSquares);
+
+        // draw(ctx, canvas, newSquares);
     };
 
     const draw = (
@@ -131,17 +148,7 @@ export default function GoldenSpiral({ className }: { className?: string }) {
         const centerX = canvas.width / (2 * window.devicePixelRatio);
         const centerY = canvas.height / (2 * window.devicePixelRatio);
         const canvasHeight = canvas.height / window.devicePixelRatio;
-        const baseSize = (canvasHeight * 0.8) / currentSquares[startingSquraeIndex].size;
-
-        // We only need PATTERN_LENGTH squares now
-        const totalIterations = Math.floor(PATTERN_LENGTH * 2.5);
-
-        if (currentSquares.length !== totalIterations) {
-            const newSquares = calculateSquares(totalIterations);
-            squaresRef.current = newSquares;
-            setSquares(newSquares);
-            currentSquares = newSquares;
-        }
+        // const baseSize = calculateBaseSize(canvasHeight, currentSquares[startingSquareIndex].size);
 
         // Transform sequence
         ctx.translate(centerX, centerY);
@@ -153,7 +160,6 @@ export default function GoldenSpiral({ className }: { className?: string }) {
         ctx.arc(0, 0, 5 / scale, 0, Math.PI * 2);
         ctx.fillStyle = "red";
         ctx.fill();
-
         ctx.lineWidth = 0.5 / scale;
         ctx.strokeStyle = "white";
 
@@ -162,6 +168,7 @@ export default function GoldenSpiral({ className }: { className?: string }) {
             const x = square.x * baseSize;
             const y = square.y * baseSize;
             const size = square.size * baseSize;
+            const fontSize = size / 30;
 
             // Draw square
             ctx.strokeStyle = "white";
@@ -170,34 +177,53 @@ export default function GoldenSpiral({ className }: { className?: string }) {
             // Draw circle inside square
             ctx.beginPath();
             ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
-            if (index === startingSquraeIndex) {
+            if (index === startingSquareIndex) {
                 ctx.fillStyle = "red";
             } else {
                 ctx.fillStyle = "rgba(200, 0, 0, 0.4)";
             }
             ctx.fill();
 
-            // Add square number
-            ctx.save();
-            ctx.fillStyle = "white";
-            ctx.font = `${Math.min(size / 3, 16) / scale}px sans-serif`;
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText(square.id.toString(), x + size / 2, y + size / 2);
-            ctx.restore();
+            // Add square number and properties
+            if (index === startingSquareIndex) {
+                ctx.save();
+                ctx.fillStyle = "white";
+                ctx.font = `${fontSize}px sans-serif`;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+
+                // Square number
+                ctx.fillText((index - startingSquareIndex).toString(), x + size / 2, y + size / 2);
+
+                // Additional properties
+                const lineHeight = fontSize * 1.2;
+                ctx.fillText(`Size: ${square.size}`, x + size / 2, y + size / 2 + lineHeight);
+                ctx.fillText(
+                    `Direction: ${square.direction}`,
+                    x + size / 2,
+                    y + size / 2 + lineHeight * 2
+                );
+                ctx.fillText(
+                    `Position: (${square.x.toFixed(1)}, ${square.y.toFixed(1)})`,
+                    x + size / 2,
+                    y + size / 2 + lineHeight * 3
+                );
+
+                ctx.restore();
+            }
 
             // Shade starting square
-            if (index === startingSquraeIndex && zoomDepth === 0) {
+            if (index === startingSquareIndex && zoomDepth === 0) {
                 ctx.save();
                 ctx.fillStyle = "rgba(0, 0, 255, 0.2)";
                 ctx.fillRect(x, y, size, size);
 
                 // Add text
                 ctx.fillStyle = "white";
-                ctx.font = `${12 / scale}px sans-serif`;
+                ctx.font = `${fontSize}px sans-serif`;
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
-                ctx.fillText("Starting Square", x + size / 2, y + size / 2 - 25);
+                ctx.fillText("Starting Square", x + size / 2, y + fontSize);
                 ctx.restore();
             }
 
@@ -247,81 +273,87 @@ export default function GoldenSpiral({ className }: { className?: string }) {
             setup();
         };
 
-        draw(ctx, canvas, squaresRef.current);
+        // draw(ctx, canvas, squaresRef.current);
 
         window.addEventListener("resize", handleResize);
         return () => window.removeEventListener("resize", handleResize);
     }, [scale, offset]);
 
     const animateScale = useCallback(() => {
-        const diff = targetScale.current - scaleRef.current;
-        if (Math.abs(diff) < 0.0001) {
-            scaleRef.current = targetScale.current;
-            setScale(targetScale.current);
+        const animate = () => {
+            const diff = targetScale.current - scaleRef.current;
+            if (Math.abs(diff) < 0.0001) {
+                scaleRef.current = targetScale.current;
+                setScale(targetScale.current);
+                return;
+            }
+
+            // Smoother easing
+            scaleRef.current += diff * 0.1; // Increased from 0.1 to 0.15
+            setScale(scaleRef.current);
+            rafRef.current = requestAnimationFrame(animate);
+        };
+
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = requestAnimationFrame(animate);
+    }, []);
+
+    // Define handleWheel outside useEffect
+    const handleWheel = useCallback((e: WheelEvent) => {
+        e.preventDefault();
+
+        // Throttle wheel events
+        const now = performance.now();
+        if (now - lastWheelTime.current < 16) return; // ~60fps
+        lastWheelTime.current = now;
+
+        const scaleFactor = e.deltaY > 0 ? 0.9 : 1.1;
+        const newTargetScale = targetScale.current * scaleFactor;
+
+        // Prevent zooming out past 0.75 when at depth 0
+        if (zoomDepthRef.current === 0 && newTargetScale < 0.75 && scaleFactor < 1) {
             return;
         }
 
-        // Smoother easing with smaller step
-        scaleRef.current += diff * 0.1;
-        setScale(scaleRef.current);
-        console.log(scaleRef.current);
-        rafRef.current = requestAnimationFrame(animateScale);
-    }, []);
+        // Zooming in past threshold
+        if (newTargetScale > resetThreshold) {
+            targetScale.current = newTargetScale / resetThreshold;
+            scaleRef.current = scaleRef.current / resetThreshold;
+            setScale(scale / resetThreshold);
 
-    // Add wheel event options
+            if (scaleFactor > 1) {
+                zoomDepthRef.current++;
+                setZoomDepth(zoomDepthRef.current);
+            }
+        }
+        // Zooming out when we have depth
+        else if (newTargetScale < 1 && zoomDepthRef.current > 0) {
+            targetScale.current = newTargetScale * resetThreshold;
+            scaleRef.current = scaleRef.current * resetThreshold;
+            setScale(scale * resetThreshold);
+
+            zoomDepthRef.current--;
+            setZoomDepth(zoomDepthRef.current);
+        }
+        // Normal zooming
+        else {
+            targetScale.current = newTargetScale;
+        }
+
+        if (rafRef.current) {
+            cancelAnimationFrame(rafRef.current);
+        }
+        rafRef.current = requestAnimationFrame(animateScale);
+    }, []); // Remove scale and animateScale from dependencies
+
+    // Use handleWheel in useEffect
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
 
-        const handleWheel = (e: WheelEvent) => {
-            e.preventDefault();
-
-            const now = performance.now();
-            if (now - lastWheelTime.current < 16) return;
-            lastWheelTime.current = now;
-
-            const scaleFactor = e.deltaY > 0 ? 0.9 : 1.1;
-            const newTargetScale = targetScale.current * scaleFactor;
-
-            // Prevent zooming out past 0.75 when at depth 0
-            if (zoomDepthRef.current === 0 && newTargetScale < 0.75 && scaleFactor < 1) {
-                return;
-            }
-
-            // Zooming in past threshold
-            if (newTargetScale > RESET_THRESHOLD) {
-                targetScale.current = newTargetScale / RESET_THRESHOLD;
-                scaleRef.current = scaleRef.current / RESET_THRESHOLD;
-                setScale(scale / RESET_THRESHOLD);
-
-                if (scaleFactor > 1) {
-                    zoomDepthRef.current++;
-                    setZoomDepth(zoomDepthRef.current);
-                }
-            }
-            // Zooming out when we have depth
-            else if (newTargetScale < 1 && zoomDepthRef.current > 0) {
-                targetScale.current = newTargetScale * RESET_THRESHOLD;
-                scaleRef.current = scaleRef.current * RESET_THRESHOLD;
-                setScale(scale * RESET_THRESHOLD);
-
-                zoomDepthRef.current--;
-                setZoomDepth(zoomDepthRef.current);
-            }
-            // Normal zooming
-            else {
-                targetScale.current = newTargetScale;
-            }
-
-            if (rafRef.current) {
-                cancelAnimationFrame(rafRef.current);
-            }
-            rafRef.current = requestAnimationFrame(animateScale);
-        };
-
         canvas.addEventListener("wheel", handleWheel, { passive: false });
         return () => canvas.removeEventListener("wheel", handleWheel);
-    }, [scale]); // Add dependencies as needed
+    }, [handleWheel]); // Add handleWheel as dependency
 
     // Cleanup RAF on unmount
     useEffect(() => {
@@ -343,34 +375,53 @@ export default function GoldenSpiral({ className }: { className?: string }) {
                     return;
                 }
 
-                setOffset((current) => ({
-                    x: current.x + diffX * 0.15,
-                    y: current.y + diffY * 0.15,
-                }));
+                setOffset({
+                    x: offset.x + diffX * 0.15,
+                    y: offset.y + diffY * 0.15,
+                });
 
                 requestAnimationFrame(animate);
             };
 
             requestAnimationFrame(animate);
         },
-        [offset]
+        [offset, setOffset]
     );
 
     const handleReset = () => {
-        // Reset zoom depth
         zoomDepthRef.current = 0;
-        setZoomDepth(0);
-
-        // Animate scale to 1
         targetScale.current = 1;
-        if (rafRef.current) {
-            cancelAnimationFrame(rafRef.current);
-        }
-        rafRef.current = requestAnimationFrame(animateScale);
-
-        // Animate offset to center
-        animateOffset({ x: 0, y: 0 });
+        reset();
     };
+
+    // Add virtualization to only render visible squares
+    // const visibleSquares = useMemo(() => {
+    //     return squares.filter((square) => {
+    //         const size = square.size * baseSize * scale;
+    //         const x = square.x * baseSize * scale + offset.x * scale;
+    //         const y = square.y * baseSize * scale + offset.y * scale;
+
+    //         // Check if square is in viewport
+    //         return (
+    //             x + size > -window.innerWidth / 2 &&
+    //             x < window.innerWidth / 2 &&
+    //             y + size > -window.innerHeight / 2 &&
+    //             y < window.innerHeight / 2
+    //         );
+    //     });
+    // }, [squares, baseSize, scale, offset]);
+
+    // Memoize expensive calculations
+    const height = useMemo(() => canvasRef.current?.height || 0, []);
+
+    // Debounce resize handler
+    const debouncedResize = useMemo(
+        () =>
+            debounce(() => {
+                setup();
+            }, 100),
+        []
+    );
 
     return (
         <div className={cn("", className)}>
@@ -393,16 +444,28 @@ export default function GoldenSpiral({ className }: { className?: string }) {
                     className="absolute w-full h-full rounded-3xl bg-neutral-700/30 border-white"
                 />
 
-                {/* <div className="relative">
-                    {squares.map((square) => (
-                        <SpiralSquareComponent
-                            key={square.id}
-                            square={square}
-                            baseSize={40}
-                            getContext={getCanvasContext}
-                        />
-                    ))}
-                </div> */}
+                {/* {squares.map(
+                    (square, index) =>
+                        [4, 5, 6].includes(index) && (
+                            <SpiralSquareComponent
+                                key={square.id}
+                                square={square}
+                                baseSize={baseSize}
+                                scale={scale}
+                                offset={offset}
+                            />
+                        )
+                )} */}
+                {squares.map((square, index) => (
+                    <SpiralSquareContent
+                        key={square.id}
+                        square={square}
+                        baseSize={baseSize}
+                        scale={scale}
+                        offset={offset}
+                        zoomDepth={zoomDepth}
+                    />
+                ))}
             </div>
         </div>
     );

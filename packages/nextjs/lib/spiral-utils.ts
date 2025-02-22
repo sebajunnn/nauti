@@ -1,12 +1,11 @@
-import { Vector, SpiralSquare } from "@/types/spiral";
-import { SPIRAL_CONSTANTS } from "@/types/spiral";
+import { Vector, SpiralSquare } from "@/types/golden-spiral";
 
-export function generateFibonacciSequence(iterations: number): number[] {
+export function fibonacciSequence(iterations: number): number[] {
     let sequence = [1, 1];
-    for (let i = 0; i < iterations + SPIRAL_CONSTANTS.OUTER_SQUARE_COUNT; i++) {
+    for (let i = 0; i < iterations; i++) {
         sequence.push(sequence[i + 1] + sequence[i]);
     }
-    return sequence.reverse();
+    return sequence;
 }
 
 export function calculateNextPosition(
@@ -15,14 +14,15 @@ export function calculateNextPosition(
     next: number,
     direction: number
 ): Vector {
+    // Direction indicates position of current square in relation to next square
     switch (direction % 4) {
-        case 0:
+        case 0: // Right
             return { x: pos.x + current, y: pos.y };
-        case 1:
+        case 1: // Down
             return { x: pos.x + current - next, y: pos.y + current };
-        case 2:
+        case 2: // Left
             return { x: pos.x - next, y: pos.y + current - next };
-        case 3:
+        case 3: // Up
             return { x: pos.x, y: pos.y - next };
         default:
             return pos;
