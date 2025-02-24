@@ -5,20 +5,16 @@ import { SpiralSquareContent } from "@/components/goldenSpiral/SpiralSquareConte
 import { cn, debounce } from "@/lib/utils";
 import { SpiralSquare, Vector, goldenSpiralConstants } from "@/types/golden-spiral";
 import { useSpiralStore } from "@/stores/useSpiralStore";
-import { VisibilityOverlay } from "@/components/debug/VisibilityOverlay";
+import { IndexStateOverlay } from "@/components/debug/IndexStateOverlay";
 import { useSquareStore } from "@/stores/useSquareStore";
-
-// Constants for sizing
-const BASE_SIZE_RATIO = 0.8;
-const calculateBaseSize = (height: number, squareSize: number) =>
-    (height * BASE_SIZE_RATIO) / squareSize;
 
 export default function GoldenSpiral({ className }: { className?: string }) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [drawGoldenSpiral, setDrawGoldenSpiral] = useState(true);
+    const drawGoldenSpiral = false;
 
-    const { scale, zoomDepth, offset, setScale, setZoomDepth, setOffset, reset } = useSpiralStore();
+    const { scale, zoomDepth, setScale, setZoomDepth, reset } = useSpiralStore();
     const { reset: resetVisibility } = useSquareStore();
+    const [startingOffset, setStartingOffset] = useState<Vector>({ x: 0, y: 0 });
 
     const scaleRef = useRef(1);
     const targetScale = useRef(1);
@@ -39,13 +35,11 @@ export default function GoldenSpiral({ className }: { className?: string }) {
 
     // State for golden spiral squares
     const [squares, setSquares] = useState<SpiralSquare[]>([]);
-    const squaresRef = useRef<SpiralSquare[]>([]);
     const [baseSize, setBaseSize] = useState(0);
-
+    const baseSizeRatio = 0.8;
     const zoomDepthRef = useRef(0);
-
-    // Add with other refs at top of component
-    const offsetAnimationRef = useRef<number | undefined>(undefined);
+    const calculateBaseSize = (height: number, squareSize: number) =>
+        (height * baseSizeRatio) / squareSize;
 
     const calculateSquares = (
         _totalCount: number,
@@ -93,23 +87,29 @@ export default function GoldenSpiral({ className }: { className?: string }) {
             });
         }
 
-        // Find position of smallest square (last one)
+        // Find center offset
         const lastSquare = squares[squares.length - 1];
-
-        // Adjust center point based on direction of smallest square
         const centerOffset = {
             x: lastSquare.x + (lastSquare.direction === 2 ? lastSquare.size : 0),
             y: lastSquare.y + (lastSquare.direction === 3 ? lastSquare.size : 0),
         };
-
-        // Offset all squares relative to adjusted center
+        // Apply both offsets to all squares
         squares.forEach((square) => {
             square.x -= centerOffset.x;
             square.y -= centerOffset.y;
         });
 
-        // Return only the squares we want to display
         return squares.slice(squares.length - mainIterationCount);
+    };
+
+    const calculateStartingOffset = (squares: SpiralSquare[]) => {
+        if (!squares.length) return { x: 0, y: 0 } as Vector;
+
+        const startingSquare = squares[startingSquareIndex];
+        return {
+            x: 0,
+            y: startingSquare.y + startingSquare.size / 2,
+        } as Vector;
     };
 
     const getCanvasContext = useCallback(() => {
@@ -142,10 +142,11 @@ export default function GoldenSpiral({ className }: { className?: string }) {
 
         const newSquares = calculateSquares(totalCount, startingSquareDirection);
         const baseSize = calculateBaseSize(canvas.height, newSquares[startingSquareIndex].size);
+        const offset = calculateStartingOffset(newSquares);
 
-        squaresRef.current = newSquares;
-        setBaseSize(baseSize);
+        setStartingOffset(offset);
         setSquares(newSquares);
+        setBaseSize(baseSize);
         resetVisibility(newSquares);
 
         draw(ctx, canvas, newSquares);
@@ -169,17 +170,9 @@ export default function GoldenSpiral({ className }: { className?: string }) {
         const centerY = canvas.height / (2 * window.devicePixelRatio);
         const canvasHeight = canvas.height / window.devicePixelRatio;
 
-        // Calculate vertical offset for initial view
-        const startingSquare = currentSquares[startingSquareIndex];
-        const verticalOffset =
-            zoomDepth === 0 && scale === 1
-                ? -(startingSquare.y * baseSize + (startingSquare.size * baseSize) / 2)
-                : 0;
-
         // Transform sequence
         ctx.translate(centerX, centerY);
         ctx.scale(scale, scale);
-        ctx.translate(offset.x, offset.y);
 
         // Debug center point
         ctx.beginPath();
@@ -290,7 +283,6 @@ export default function GoldenSpiral({ className }: { className?: string }) {
         // Give the canvas a moment to properly initialize
         const timeoutId = setTimeout(() => {
             setup();
-            console.log(squaresRef.current);
         }, 0);
 
         return () => clearTimeout(timeoutId);
@@ -305,11 +297,11 @@ export default function GoldenSpiral({ className }: { className?: string }) {
             setup();
         };
 
-        draw(ctx, canvas, squaresRef.current);
+        draw(ctx, canvas, squares);
 
         window.addEventListener("resize", handleResize);
         return () => window.removeEventListener("resize", handleResize);
-    }, [scale, offset, squaresRef.current]);
+    }, [scale, squares]);
 
     const animateScale = useCallback(() => {
         const diff = targetScale.current - scaleRef.current;
@@ -389,56 +381,25 @@ export default function GoldenSpiral({ className }: { className?: string }) {
         };
     }, []);
 
-    const animateOffset = useCallback((targetOffset: { x: number; y: number }) => {
-        const animate = () => {
-            setOffset((current) => {
-                const diffX = targetOffset.x - current.x;
-                const diffY = targetOffset.y - current.y;
-
-                if (Math.abs(diffX) < 0.1 && Math.abs(diffY) < 0.1) {
-                    return targetOffset;
-                }
-
-                offsetAnimationRef.current = requestAnimationFrame(animate);
-                return {
-                    x: current.x + diffX * 0.15,
-                    y: current.y + diffY * 0.15,
-                };
-            });
-        };
-
-        if (offsetAnimationRef.current) {
-            cancelAnimationFrame(offsetAnimationRef.current);
-        }
-        animate();
-    }, []);
-
-    const centerOnStartingSquare = useCallback(() => {
-        if (zoomDepth === 0 && squares.length > 0 && scale >= 1) {
-            const startingSquare = squares[startingSquareIndex];
-            const baseOffset = -(
-                startingSquare.y * baseSize +
-                (startingSquare.size * baseSize) / 2
-            );
-
-            // Ease out the offset as scale increases
-            const easeOutOffsetX = 70 * Math.exp(-(scale - 1) * 0.5);
-            const easeOutOffsetY = baseOffset * Math.exp(-(scale - 1) * 0.5);
-            animateOffset({ x: easeOutOffsetX, y: easeOutOffsetY });
-        }
-    }, [zoomDepth, scale, squares, baseSize]);
-
-    useEffect(() => {
-        centerOnStartingSquare();
-    }, [centerOnStartingSquare]);
-
     const handleReset = () => {
         zoomDepthRef.current = 0;
         targetScale.current = 1;
         setScale(1);
         setZoomDepth(0);
-        centerOnStartingSquare();
     };
+
+    // Calculate eased and scaled offset based on scale
+    const finalOffset = useMemo(() => {
+        if (zoomDepth === 0) {
+            const effectiveScale = Math.max(1, scale);
+            const easeOutFactor = Math.max(0, 1 - (effectiveScale - 1) * 0.5);
+            return {
+                x: startingOffset.x * baseSize * easeOutFactor,
+                y: -startingOffset.y * baseSize * easeOutFactor,
+            };
+        }
+        return { x: 0, y: 0 };
+    }, [scale, startingOffset, baseSize]);
 
     return (
         <div className={cn("relative w-full h-full", className)}>
@@ -456,7 +417,7 @@ export default function GoldenSpiral({ className }: { className?: string }) {
                         squareIndex={index}
                         baseSize={baseSize}
                         scale={scale}
-                        offset={offset}
+                        offset={finalOffset}
                         zoomDepth={zoomDepth}
                     />
                 ))}
@@ -467,7 +428,7 @@ export default function GoldenSpiral({ className }: { className?: string }) {
                 Zoom Depth: {zoomDepth}
             </div>
 
-            <VisibilityOverlay squares={squares} />
+            <IndexStateOverlay squares={squares} />
 
             <button
                 onClick={handleReset}
