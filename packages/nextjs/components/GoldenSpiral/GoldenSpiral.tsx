@@ -1,21 +1,20 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
-import { SpiralSquareContent } from "@/components/GoldenSpiral/SpiralSquareContent";
+import { SpiralSquareContent } from "@/components/goldenSpiral/SpiralSquareContent";
 import { cn, debounce } from "@/lib/utils";
 import { SpiralSquare, Vector, goldenSpiralConstants } from "@/types/golden-spiral";
 import { useSpiralStore } from "@/stores/useSpiralStore";
-
-// Constants for sizing
-const BASE_SIZE_RATIO = 0.8;
-const calculateBaseSize = (height: number, squareSize: number) =>
-    (height * BASE_SIZE_RATIO) / squareSize;
+import { IndexStateOverlay } from "@/components/debug/IndexStateOverlay";
+import { useSquareStore } from "@/stores/useSquareStore";
 
 export default function GoldenSpiral({ className }: { className?: string }) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [drawGoldenSpiral, setDrawGoldenSpiral] = useState(false);
+    const drawGoldenSpiral = false;
 
-    const { scale, zoomDepth, offset, setScale, setZoomDepth, setOffset, reset } = useSpiralStore();
+    const { scale, zoomDepth, setScale, setZoomDepth, reset } = useSpiralStore();
+    const { reset: resetVisibility } = useSquareStore();
+    const [startingOffset, setStartingOffset] = useState<Vector>({ x: 0, y: 0 });
 
     const scaleRef = useRef(1);
     const targetScale = useRef(1);
@@ -36,10 +35,11 @@ export default function GoldenSpiral({ className }: { className?: string }) {
 
     // State for golden spiral squares
     const [squares, setSquares] = useState<SpiralSquare[]>([]);
-    const squaresRef = useRef<SpiralSquare[]>([]);
     const [baseSize, setBaseSize] = useState(0);
-
+    const baseSizeRatio = 0.8;
     const zoomDepthRef = useRef(0);
+    const calculateBaseSize = (height: number, squareSize: number) =>
+        (height * baseSizeRatio) / squareSize;
 
     const calculateSquares = (
         _totalCount: number,
@@ -79,7 +79,7 @@ export default function GoldenSpiral({ className }: { className?: string }) {
             }
 
             squares.push({
-                id: i + 1,
+                id: i + 1 - startingSquareIndex,
                 x: pos.x,
                 y: pos.y,
                 size: next,
@@ -87,23 +87,29 @@ export default function GoldenSpiral({ className }: { className?: string }) {
             });
         }
 
-        // Find position of smallest square (last one)
+        // Find center offset
         const lastSquare = squares[squares.length - 1];
-
-        // Adjust center point based on direction of smallest square
         const centerOffset = {
             x: lastSquare.x + (lastSquare.direction === 2 ? lastSquare.size : 0),
             y: lastSquare.y + (lastSquare.direction === 3 ? lastSquare.size : 0),
         };
-
-        // Offset all squares relative to adjusted center
+        // Apply both offsets to all squares
         squares.forEach((square) => {
             square.x -= centerOffset.x;
             square.y -= centerOffset.y;
         });
 
-        // Return only the squares we want to display
         return squares.slice(squares.length - mainIterationCount);
+    };
+
+    const calculateStartingOffset = (squares: SpiralSquare[]) => {
+        if (!squares.length) return { x: 0, y: 0 } as Vector;
+
+        const startingSquare = squares[startingSquareIndex];
+        return {
+            x: 0,
+            y: startingSquare.y + startingSquare.size / 2,
+        } as Vector;
     };
 
     const getCanvasContext = useCallback(() => {
@@ -136,10 +142,12 @@ export default function GoldenSpiral({ className }: { className?: string }) {
 
         const newSquares = calculateSquares(totalCount, startingSquareDirection);
         const baseSize = calculateBaseSize(canvas.height, newSquares[startingSquareIndex].size);
+        const offset = calculateStartingOffset(newSquares);
 
-        squaresRef.current = newSquares;
-        setBaseSize(baseSize);
+        setStartingOffset(offset);
         setSquares(newSquares);
+        setBaseSize(baseSize);
+        resetVisibility(newSquares);
 
         draw(ctx, canvas, newSquares);
     };
@@ -155,8 +163,6 @@ export default function GoldenSpiral({ className }: { className?: string }) {
             return;
         }
 
-        console.log("Drawing with:", { scale, offset });
-
         ctx.clearRect(-canvas.width, -canvas.height, canvas.width * 2, canvas.height * 2);
         ctx.save();
 
@@ -167,7 +173,6 @@ export default function GoldenSpiral({ className }: { className?: string }) {
         // Transform sequence
         ctx.translate(centerX, centerY);
         ctx.scale(scale, scale);
-        ctx.translate(offset.x, offset.y);
 
         // Debug center point
         ctx.beginPath();
@@ -199,16 +204,15 @@ export default function GoldenSpiral({ className }: { className?: string }) {
             ctx.fill();
 
             // Add square number and properties
+            ctx.save();
+            ctx.fillStyle = "white";
+            ctx.font = `${fontSize}px sans-serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+
+            // Square number
+            ctx.fillText(index.toString(), x + size / 2, y + size / 2);
             if (index === startingSquareIndex) {
-                ctx.save();
-                ctx.fillStyle = "white";
-                ctx.font = `${fontSize}px sans-serif`;
-                ctx.textAlign = "center";
-                ctx.textBaseline = "middle";
-
-                // Square number
-                ctx.fillText((index - startingSquareIndex).toString(), x + size / 2, y + size / 2);
-
                 // Additional properties
                 const lineHeight = fontSize * 1.2;
                 ctx.fillText(`Size: ${square.size}`, x + size / 2, y + size / 2 + lineHeight);
@@ -222,9 +226,8 @@ export default function GoldenSpiral({ className }: { className?: string }) {
                     x + size / 2,
                     y + size / 2 + lineHeight * 3
                 );
-
-                ctx.restore();
             }
+            ctx.restore();
 
             // Shade starting square
             if (index === startingSquareIndex && zoomDepth === 0) {
@@ -280,7 +283,6 @@ export default function GoldenSpiral({ className }: { className?: string }) {
         // Give the canvas a moment to properly initialize
         const timeoutId = setTimeout(() => {
             setup();
-            console.log(squaresRef.current);
         }, 0);
 
         return () => clearTimeout(timeoutId);
@@ -295,11 +297,11 @@ export default function GoldenSpiral({ className }: { className?: string }) {
             setup();
         };
 
-        draw(ctx, canvas, squaresRef.current);
+        draw(ctx, canvas, squares);
 
         window.addEventListener("resize", handleResize);
         return () => window.removeEventListener("resize", handleResize);
-    }, [scale, offset, squaresRef.current]);
+    }, [scale, squares]);
 
     const animateScale = useCallback(() => {
         const diff = targetScale.current - scaleRef.current;
@@ -379,97 +381,62 @@ export default function GoldenSpiral({ className }: { className?: string }) {
         };
     }, []);
 
-    const animateOffset = useCallback(
-        (targetOffset: { x: number; y: number }) => {
-            const animate = () => {
-                const diffX = targetOffset.x - offset.x;
-                const diffY = targetOffset.y - offset.y;
-
-                if (Math.abs(diffX) < 0.1 && Math.abs(diffY) < 0.1) {
-                    setOffset(targetOffset);
-                    return;
-                }
-
-                setOffset((current) => ({
-                    x: current.x + diffX * 0.15,
-                    y: current.y + diffY * 0.15,
-                }));
-
-                requestAnimationFrame(animate);
-            };
-
-            requestAnimationFrame(animate);
-        },
-        [offset]
-    );
-
     const handleReset = () => {
         zoomDepthRef.current = 0;
         targetScale.current = 1;
-        reset();
+        setScale(1);
+        setZoomDepth(0);
     };
 
-    // Add virtualization to only render visible squares
-    // const visibleSquares = useMemo(() => {
-    //     return squares.filter((square) => {
-    //         const size = square.size * baseSize * scale;
-    //         const x = square.x * baseSize * scale + offset.x * scale;
-    //         const y = square.y * baseSize * scale + offset.y * scale;
-
-    //         // Check if square is in viewport
-    //         return (
-    //             x + size > -window.innerWidth / 2 &&
-    //             x < window.innerWidth / 2 &&
-    //             y + size > -window.innerHeight / 2 &&
-    //             y < window.innerHeight / 2
-    //         );
-    //     });
-    // }, [squares, baseSize, scale, offset]);
+    // Calculate eased and scaled offset based on scale
+    const finalOffset = useMemo(() => {
+        if (zoomDepth === 0) {
+            const effectiveScale = Math.max(1, scale);
+            const easeOutFactor = Math.max(0, 1 - (effectiveScale - 1) * 0.5);
+            return {
+                x: startingOffset.x * baseSize * easeOutFactor,
+                y: -startingOffset.y * baseSize * easeOutFactor,
+            };
+        }
+        return { x: 0, y: 0 };
+    }, [scale, startingOffset, baseSize]);
 
     return (
-        <div className={cn("", className)}>
-            <div
-                className="absolute top-7 left-7 z-10 px-3 py-1 bg-background 
-                          text-foreground rounded-full"
-            >
-                Zoom Depth: {zoomDepth}
+        <div className={cn("relative w-full h-full", className)}>
+            {/* Canvas container - keep overflow hidden for canvas */}
+            <div className="absolute inset-2">
+                <canvas ref={canvasRef} className="w-full h-full rounded-3xl bg-neutral-700/30" />
             </div>
-            <button
-                onClick={handleReset}
-                className="absolute bottom-5 right-5 z-10 px-3 py-1 bg-foreground/50 hover:bg-foreground/20 
-                          text-foreground rounded-full transition-colors"
-            >
-                Reset View
-            </button>
-            <div className="relative w-full h-full">
-                <canvas
-                    ref={canvasRef}
-                    className="absolute w-full h-full rounded-3xl bg-neutral-700/30 border-white"
-                />
 
-                {/* {squares.map(
-                    (square, index) =>
-                        [4, 5, 6].includes(index) && (
-                            <SpiralSquareComponent
-                                key={square.id}
-                                square={square}
-                                baseSize={baseSize}
-                                scale={scale}
-                                offset={offset}
-                            />
-                        )
-                )} */}
+            {/* Squares container - allow overflow for intersection observer */}
+            <div className="absolute inset-0 overflow-visible pointer-events-none">
                 {squares.map((square, index) => (
                     <SpiralSquareContent
                         key={square.id}
                         square={square}
+                        squareIndex={index}
                         baseSize={baseSize}
                         scale={scale}
-                        offset={offset}
+                        offset={finalOffset}
                         zoomDepth={zoomDepth}
                     />
                 ))}
             </div>
+
+            {/* Overlays */}
+            <div className="absolute top-7 left-7 z-10 px-3 py-1 bg-background text-foreground rounded-full">
+                Zoom Depth: {zoomDepth}
+            </div>
+
+            <IndexStateOverlay squares={squares} />
+
+            <button
+                onClick={handleReset}
+                className="absolute bottom-7 right-7 z-10 px-3 py-1 bg-foreground/50 hover:bg-foreground/20 
+                          text-foreground rounded-full transition-colors"
+            >
+                Reset View
+            </button>
         </div>
     );
 }

@@ -1,0 +1,89 @@
+import { create } from "zustand";
+import { SpiralSquare } from "@/types/golden-spiral";
+import { goldenSpiralConstants } from "@/types/golden-spiral";
+import { useSpiralStore } from "@/stores/useSpiralStore";
+
+interface SquareState {
+    isVisible: boolean;
+    index: number;
+}
+
+interface SquareStoreState {
+    squareMap: Map<number, SquareState>;
+    getIndex: (id: number) => number;
+    updateSquareState: (
+        id: number,
+        isVisible: boolean,
+        baseIndex: number,
+        isTooSmall: boolean
+    ) => void;
+    updateAllSquareIndex: (zoomDepth: number) => void;
+    isSquareVisible: (id: number) => boolean;
+    reset: (squares: SpiralSquare[]) => void;
+}
+
+export const useSquareStore = create<SquareStoreState>((set, get) => ({
+    squareMap: new Map(),
+
+    getIndex: (id) => get().squareMap.get(id)?.index ?? 0,
+
+    updateSquareState: (id: number, isVisible: boolean, baseIndex: number, isTooSmall: boolean) =>
+        set((state) => {
+            const zoomDepth = useSpiralStore.getState().zoomDepth;
+            const { patternLength } = goldenSpiralConstants;
+
+            // Calculate actual index based on zoom depth
+            let actualIndex;
+            if (isVisible) {
+                actualIndex = baseIndex + (patternLength - 1) * zoomDepth;
+            } else if (isTooSmall) {
+                actualIndex = baseIndex + (patternLength - 1) * Math.abs(zoomDepth - 1);
+            } else {
+                actualIndex = baseIndex + (patternLength - 1) * (zoomDepth + 1);
+            }
+
+            console.log(
+                `Square ${id} is now ${
+                    isVisible ? "visible" : "hidden"
+                }. Fetching new index ${actualIndex}`
+            );
+            state.squareMap.set(id, { isVisible, index: actualIndex });
+            return { squareMap: state.squareMap };
+        }),
+
+    // For when zoom depth changes
+    // Needs optimising for checking if square index is already correct
+    updateAllSquareIndex: (zoomDepth: number) =>
+        set((state) => {
+            const { patternLength } = goldenSpiralConstants;
+
+            state.squareMap.forEach((squareState, squareId) => {
+                if (squareState.isVisible) {
+                    // const baseIndex = squareState.index % squareCount;
+                    const actualIndex = squareId + (patternLength - 1) * zoomDepth;
+
+                    console.log(
+                        `Square ${squareId} (${
+                            squareState.isVisible ? "visible" : "hidden"
+                        }) updating to index ${actualIndex}`
+                    );
+                    state.squareMap.set(squareId, {
+                        ...squareState,
+                        index: actualIndex,
+                    });
+                }
+            });
+
+            return { squareMap: state.squareMap };
+        }),
+
+    isSquareVisible: (id) => get().squareMap.get(id)?.isVisible || false,
+
+    reset: (squares) =>
+        set((state) => {
+            squares.forEach((square, index) =>
+                state.squareMap.set(square.id, { isVisible: false, index })
+            );
+            return { squareMap: state.squareMap };
+        }),
+}));
