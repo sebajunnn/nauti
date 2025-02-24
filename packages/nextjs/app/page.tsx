@@ -1,4 +1,4 @@
-import GoldenSpiral from "@/components/GoldenSpiral/GoldenSpiral";
+import GoldenSpiral from "@/components/goldenSpiral/GoldenSpiral";
 
 export default function Home() {
     return (

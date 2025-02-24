@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import { Vector } from "@/types/golden-spiral";
+import { useSquareStore } from "@/stores/useSquareStore";
 
-interface SpiralState {
+interface SpiralStoreState {
     scale: number;
     zoomDepth: number;
     offset: Vector;
@@ -11,12 +12,16 @@ interface SpiralState {
     reset: () => void;
 }
 
-export const useSpiralStore = create<SpiralState>((set) => ({
+export const useSpiralStore = create<SpiralStoreState>((set, get) => ({
     scale: 1,
     zoomDepth: 0,
     offset: { x: 0, y: 0 },
     setScale: (scale) => set({ scale }),
-    setZoomDepth: (depth) => set({ zoomDepth: depth }),
+    setZoomDepth: (depth: number) => {
+        set({ zoomDepth: depth });
+        // Update square indices when zoom depth changes
+        useSquareStore.getState().updateAllSquareIndex(depth);
+    },
     setOffset: (offset) =>
         set((state) => ({
             offset: typeof offset === "function" ? offset(state.offset) : offset,

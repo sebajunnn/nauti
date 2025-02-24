@@ -1,8 +1,11 @@
-import { SpiralSquare, Vector } from "@/types/golden-spiral";
 import Image from "next/image";
-import { useInView } from "react-intersection-observer";
+import { useEffect, useRef } from "react";
+import { useSquareStore } from "@/stores/useSquareStore";
+import { SpiralSquare, Vector } from "@/types/golden-spiral";
+import { goldenSpiralConstants } from "@/types/golden-spiral";
+import { cn } from "@/lib/utils";
 
-interface SpiralSquareProps {
+interface SpiralSquareContentProps {
     square: SpiralSquare;
     squareIndex?: number;
     baseSize: number;
@@ -18,32 +21,72 @@ export function SpiralSquareContent({
     scale,
     offset,
     zoomDepth,
-}: SpiralSquareProps) {
-    // Increase rootMargin to preload images before they enter viewport
-    const { ref, inView } = useInView({
-        threshold: 0,
-        triggerOnce: false,
-        rootMargin: "1000px", // Preload images 500px before they enter viewport
-        // delay: 100, // Small delay to prevent rapid changes
-    });
+}: SpiralSquareContentProps) {
+    const elementRef = useRef<HTMLDivElement>(null);
+    const { updateSquareState, getNextPatternIndex, isSquareVisible, setIndex, getIndex } =
+        useSquareStore();
+    const { patternLength } = goldenSpiralConstants;
+    const squareActualIndex = getIndex(square.id);
 
-    // Calculate base dimensions
+    // Calculate dimensions and position
     const size = square.size * baseSize;
-
-    // Calculate final position including all transformations
     const finalX = square.x * baseSize * scale + offset.x * scale;
     const finalY = square.y * baseSize * scale + offset.y * scale;
-
-    // Calculate scaled dimensions
     const scaledSize = size * scale;
+
+    const checkVisibility = () => {
+        const buffer = 2000; // buffer zone beyond viewport for visibility check
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+
+        // Calculate element bounds relative to viewport center
+        const centerX = viewportWidth / 2;
+        const centerY = viewportHeight / 2;
+
+        // Calculate element bounds
+        const left = centerX + finalX;
+        const top = centerY + finalY;
+        const right = left + scaledSize;
+        const bottom = top + scaledSize;
+
+        // Check if element is within viewport + buffer
+        const visible = !(
+            right < -buffer ||
+            left > viewportWidth + buffer ||
+            bottom < -buffer ||
+            top > viewportHeight + buffer
+        );
+
+        const isCurrentlyVisible = isSquareVisible(square.id);
+        if (visible !== isCurrentlyVisible) {
+            updateSquareState(square.id, visible, squareIndex || 0);
+        }
+    };
+
+    useEffect(() => {
+        checkVisibility();
+
+        // Still need resize listener as viewport size affects visibility
+        window.addEventListener("resize", checkVisibility);
+        return () => window.removeEventListener("resize", checkVisibility);
+    }, [
+        finalX,
+        finalY,
+        scaledSize,
+        square.id,
+        squareIndex,
+        updateSquareState,
+        getNextPatternIndex,
+        setIndex,
+    ]);
 
     // Calculate appropriate image size based on zoom
     const imageSize = Math.min(Math.ceil(scaledSize), 2048); // Cap max size
 
     return (
         <div
-            ref={ref}
-            className="absolute bg-black overflow-hidden rounded-3xl"
+            ref={elementRef}
+            className="absolute bg-neutral-700/0 overflow-hidden"
             style={{
                 width: `${scaledSize}px`,
                 height: `${scaledSize}px`,
@@ -55,12 +98,10 @@ export function SpiralSquareContent({
                 backfaceVisibility: "hidden",
                 perspective: 1000,
                 pointerEvents: "none",
-                // opacity: inView ? 1 : 0, // Fade in when visible
-                // transition: "opacity 0.3s ease-in-out", // Smoother transition
             }}
         >
             {/* {inView && ( // Only render image when in view */}
-            {true && ( // Only render image when in view
+            {/* {true && ( // Only render image when in view
                 <Image
                     src="/test.jpg"
                     alt="Logo"
@@ -75,7 +116,12 @@ export function SpiralSquareContent({
                         backfaceVisibility: "hidden",
                     }}
                 />
-            )}
+            )} */}
+            <div className="flex items-center justify-center w-full h-full">
+                <h1 className={cn("px-1 rounded-sm", "bg-white text-black")}>
+                    {squareActualIndex}
+                </h1>
+            </div>
         </div>
     );
 }

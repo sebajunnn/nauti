@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
-import { SpiralSquareContent } from "@/components/GoldenSpiral/SpiralSquareContent";
+import { SpiralSquareContent } from "@/components/goldenSpiral/SpiralSquareContent";
 import { cn, debounce } from "@/lib/utils";
 import { SpiralSquare, Vector, goldenSpiralConstants } from "@/types/golden-spiral";
 import { useSpiralStore } from "@/stores/useSpiralStore";
+import { VisibilityOverlay } from "@/components/debug/VisibilityOverlay";
+import { useSquareStore } from "@/stores/useSquareStore";
 
 // Constants for sizing
 const BASE_SIZE_RATIO = 0.8;
@@ -16,6 +18,7 @@ export default function GoldenSpiral({ className }: { className?: string }) {
     const [drawGoldenSpiral, setDrawGoldenSpiral] = useState(true);
 
     const { scale, zoomDepth, offset, setScale, setZoomDepth, setOffset, reset } = useSpiralStore();
+    const { reset: resetVisibility } = useSquareStore();
 
     const scaleRef = useRef(1);
     const targetScale = useRef(1);
@@ -82,7 +85,7 @@ export default function GoldenSpiral({ className }: { className?: string }) {
             }
 
             squares.push({
-                id: i + 1,
+                id: i + 1 - startingSquareIndex,
                 x: pos.x,
                 y: pos.y,
                 size: next,
@@ -143,6 +146,7 @@ export default function GoldenSpiral({ className }: { className?: string }) {
         squaresRef.current = newSquares;
         setBaseSize(baseSize);
         setSquares(newSquares);
+        resetVisibility(newSquares);
 
         draw(ctx, canvas, newSquares);
     };
@@ -207,16 +211,15 @@ export default function GoldenSpiral({ className }: { className?: string }) {
             ctx.fill();
 
             // Add square number and properties
+            ctx.save();
+            ctx.fillStyle = "white";
+            ctx.font = `${fontSize}px sans-serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+
+            // Square number
+            ctx.fillText(index.toString(), x + size / 2, y + size / 2);
             if (index === startingSquareIndex) {
-                ctx.save();
-                ctx.fillStyle = "white";
-                ctx.font = `${fontSize}px sans-serif`;
-                ctx.textAlign = "center";
-                ctx.textBaseline = "middle";
-
-                // Square number
-                ctx.fillText((index - startingSquareIndex).toString(), x + size / 2, y + size / 2);
-
                 // Additional properties
                 const lineHeight = fontSize * 1.2;
                 ctx.fillText(`Size: ${square.size}`, x + size / 2, y + size / 2 + lineHeight);
@@ -230,9 +233,8 @@ export default function GoldenSpiral({ className }: { className?: string }) {
                     x + size / 2,
                     y + size / 2 + lineHeight * 3
                 );
-
-                ctx.restore();
             }
+            ctx.restore();
 
             // Shade starting square
             if (index === startingSquareIndex && zoomDepth === 0) {
@@ -439,13 +441,34 @@ export default function GoldenSpiral({ className }: { className?: string }) {
     };
 
     return (
-        <div className={cn("", className)}>
-            <div
-                className="absolute top-7 left-7 z-10 px-3 py-1 bg-background 
-                          text-foreground rounded-full"
-            >
+        <div className={cn("relative w-full h-full", className)}>
+            {/* Canvas container - keep overflow hidden for canvas */}
+            <div className="absolute inset-2">
+                <canvas ref={canvasRef} className="w-full h-full rounded-3xl bg-neutral-700/30" />
+            </div>
+
+            {/* Squares container - allow overflow for intersection observer */}
+            <div className="absolute inset-0 overflow-visible pointer-events-none">
+                {squares.map((square, index) => (
+                    <SpiralSquareContent
+                        key={square.id}
+                        square={square}
+                        squareIndex={index}
+                        baseSize={baseSize}
+                        scale={scale}
+                        offset={offset}
+                        zoomDepth={zoomDepth}
+                    />
+                ))}
+            </div>
+
+            {/* Overlays */}
+            <div className="absolute top-7 left-7 z-10 px-3 py-1 bg-background text-foreground rounded-full">
                 Zoom Depth: {zoomDepth}
             </div>
+
+            <VisibilityOverlay squares={squares} />
+
             <button
                 onClick={handleReset}
                 className="absolute bottom-7 right-7 z-10 px-3 py-1 bg-foreground/50 hover:bg-foreground/20 
@@ -453,22 +476,6 @@ export default function GoldenSpiral({ className }: { className?: string }) {
             >
                 Reset View
             </button>
-            <div className="relative w-full h-full">
-                <canvas
-                    ref={canvasRef}
-                    className="absolute w-full h-full rounded-3xl bg-neutral-700/30 border-white"
-                />
-                {/* {squares.map((square, index) => (
-                    <SpiralSquareContent
-                        key={square.id}
-                        square={square}
-                        baseSize={baseSize}
-                        scale={scale}
-                        offset={offset}
-                        zoomDepth={zoomDepth}
-                    />
-                ))} */}
-            </div>
         </div>
     );
 }
