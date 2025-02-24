@@ -1,28 +1,32 @@
-# Blocks For Sale
+# Nauti
 
 A decentralized marketplace for buying and selling blocks built with Next.js, Tailwind CSS, shadcn/ui, and smart contracts.
 
 ## Prerequisites
 
 Before you begin, ensure you have installed:
-- [Node.js](https://nodejs.org/) (v18.x or higher)
-- [pnpm](https://pnpm.io/) (v8.x or higher)
-- [Git](https://git-scm.com/)
+
+-   [Node.js](https://nodejs.org/) (v18.x or higher)
+-   [pnpm](https://pnpm.io/) (v8.x or higher)
+-   [Git](https://git-scm.com/)
 
 ## 🚀 Quick Start
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/your-username/blocks-for-sale.git
 cd blocks-for-sale
 ```
 
 2. Install dependencies:
+
 ```bash
 pnpm install
 ```
 
 3. Start local hardhat node:
+
 ```bash
 pnpm contracts:chain
 ```
@@ -56,13 +60,15 @@ blocks-for-sale/
 ### Frontend Development
 
 The frontend is built with:
-- Next.js 13 (App Router)
-- TypeScript
-- Tailwind CSS
-- shadcn/ui
-- wagmi/viem for Web3 interactions
+
+-   Next.js 13 (App Router)
+-   TypeScript
+-   Tailwind CSS
+-   shadcn/ui
+-   wagmi/viem for Web3 interactions
 
 To start the frontend in development mode:
+
 ```bash
 pnpm dev
 ```
@@ -78,8 +84,8 @@ pnpm contracts:deploy
 
 ## 📚 Additional Documentation
 
-- [Frontend Documentation](./packages/nextjs/README.md)
-- [Smart Contract Documentation](./packages/contracts/README.md)
+-   [Frontend Documentation](./packages/nextjs/README.md)
+-   [Smart Contract Documentation](./packages/contracts/README.md)
 
 ## 📄 License
 
@@ -87,6 +93,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- [Scaffold-ETH 2](https://github.com/scaffold-eth/scaffold-eth-2)
-- [shadcn/ui](https://ui.shadcn.com/)
-- [wagmi](https://wagmi.sh/)
+-   [Scaffold-ETH 2](https://github.com/scaffold-eth/scaffold-eth-2)
+-   [shadcn/ui](https://ui.shadcn.com/)
+-   [wagmi](https://wagmi.sh/)
