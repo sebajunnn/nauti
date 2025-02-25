@@ -1,25 +1,41 @@
 import { useState } from "react";
 import { SpiralSquare } from "@/types/golden-spiral";
 import { useSquareStore } from "@/stores/useSquareStore";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
+import { useSpiralStore } from "@/stores/useSpiralStore";
 
-export function IndexStateOverlay({ squares }: { squares: SpiralSquare[] }) {
-    const [isOpen, setIsOpen] = useState(true);
+export function IndexStateOverlay({
+    squares,
+    handleReset,
+}: {
+    squares: SpiralSquare[];
+    handleReset: () => void;
+}) {
+    const [isOpen, setIsOpen] = useState(false);
     const { isSquareVisible, getIndex } = useSquareStore();
+    const { zoomDepth } = useSpiralStore();
 
     return (
         <div className="absolute top-7 right-7 z-10">
             <div
-                className="bg-background text-foreground rounded-xl overflow-hidden shadow-lg"
+                className="gap-0 bg-background text-foreground rounded-2xl overflow-hidden shadow-lg"
                 style={{ maxHeight: isOpen ? "fit-content" : "48px" }}
             >
-                <button
-                    onClick={() => setIsOpen(!isOpen)}
-                    className="w-full px-4 py-2 flex items-center justify-between hover:bg-neutral-800/50"
-                >
-                    <span className="text-xs">Index State</span>
-                    {isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                </button>
+                <div className="flex items-center justify-between">
+                    <button className="px-4 py-3 hover:bg-neutral-800/50" onClick={handleReset}>
+                        <RefreshCw size={20} className="text-neutral-400" />
+                    </button>
+                    <button
+                        onClick={() => setIsOpen(!isOpen)}
+                        className="w-full px-4 py-2 flex items-center justify-between hover:bg-neutral-800/50"
+                    >
+                        <div className="flex flex-col items-start gap-0">
+                            <span className="text-xs">Index State</span>
+                            <span className="text-xs opacity-50">Depth: {zoomDepth}</span>
+                        </div>
+                        {isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                    </button>
+                </div>
 
                 <div
                     className={`overflow-auto transition-all duration-300 ease-in-out ${

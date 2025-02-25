@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
-import { SpiralSquareContent } from "@/components/GoldenSpiral/SpiralSquareContent";
+import { SpiralSquareContent } from "@/components/goldenSpiral/SpiralSquareContent";
 import { cn, debounce } from "@/lib/utils";
 import { SpiralSquare, Vector, goldenSpiralConstants } from "@/types/golden-spiral";
 import { useSpiralStore } from "@/stores/useSpiralStore";
@@ -36,10 +36,15 @@ export default function GoldenSpiral({ className }: { className?: string }) {
     // State for golden spiral squares
     const [squares, setSquares] = useState<SpiralSquare[]>([]);
     const [baseSize, setBaseSize] = useState(0);
-    const baseSizeRatio = 0.8;
+    const baseSizeRatio = 1;
     const zoomDepthRef = useRef(0);
-    const calculateBaseSize = (height: number, squareSize: number) =>
-        (height * baseSizeRatio) / squareSize;
+
+    const calculateBaseSize = (height: number, squareSize: number) => {
+        // Account for 1rem (16px) padding on each side (inset-2 = 0.5rem * 2 * 2)
+        const padding = 16;
+        const size = Math.min(window.innerHeight - padding, height - padding);
+        return (size * baseSizeRatio) / squareSize;
+    };
 
     const calculateSquares = (
         _totalCount: number,
@@ -107,7 +112,7 @@ export default function GoldenSpiral({ className }: { className?: string }) {
 
         const startingSquare = squares[startingSquareIndex];
         return {
-            x: 0,
+            x: startingSquare.x + startingSquare.size,
             y: startingSquare.y + startingSquare.size / 2,
         } as Vector;
     };
@@ -394,7 +399,8 @@ export default function GoldenSpiral({ className }: { className?: string }) {
             const effectiveScale = Math.max(1, scale);
             const easeOutFactor = Math.max(0, 1 - (effectiveScale - 1) * 0.5);
             return {
-                x: startingOffset.x * baseSize * easeOutFactor,
+                // x: startingOffset.x * baseSize * easeOutFactor,
+                x: -startingOffset.x * baseSize * easeOutFactor,
                 y: -startingOffset.y * baseSize * easeOutFactor,
             };
         }
@@ -402,14 +408,14 @@ export default function GoldenSpiral({ className }: { className?: string }) {
     }, [scale, startingOffset, baseSize]);
 
     return (
-        <div className={cn("relative w-full h-full", className)}>
+        <div className={cn("relative w-full h-full overflow-hidden", className)}>
             {/* Canvas container - keep overflow hidden for canvas */}
-            <div className="absolute inset-2">
-                <canvas ref={canvasRef} className="w-full h-full rounded-3xl bg-neutral-700/30" />
+            <div className="absolute inset-2 rounded-4xl overflow-hidden bg-none">
+                <canvas ref={canvasRef} className="w-full h-full" />
             </div>
 
-            {/* Squares container - allow overflow for intersection observer */}
-            <div className="absolute inset-0 overflow-visible pointer-events-none">
+            {/* Squares container - keep overflow hidden */}
+            <div className="absolute inset-2 overflow-hidden rounded-4xl  pointer-events-none">
                 {squares.map((square, index) => (
                     <SpiralSquareContent
                         key={square.id}
@@ -424,19 +430,7 @@ export default function GoldenSpiral({ className }: { className?: string }) {
             </div>
 
             {/* Overlays */}
-            <div className="absolute top-7 left-7 z-10 px-3 py-1 bg-background text-foreground rounded-full">
-                Zoom Depth: {zoomDepth}
-            </div>
-
-            <IndexStateOverlay squares={squares} />
-
-            <button
-                onClick={handleReset}
-                className="absolute bottom-7 right-7 z-10 px-3 py-1 bg-foreground/50 hover:bg-foreground/20 
-                          text-foreground rounded-full transition-colors"
-            >
-                Reset View
-            </button>
+            <IndexStateOverlay squares={squares} handleReset={handleReset} />
         </div>
     );
 }

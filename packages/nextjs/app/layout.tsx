@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Providers } from "@/components/Providers";
+import { NoiseOverlay } from "@/components/NoiseOverlay";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -15,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-    title: "Block For Sale",
+    title: "Nauti",
     description: "Eternal Web3 Pages",
 };
 
@@ -27,11 +28,15 @@ export default function RootLayout({
     return (
         <html lang="en" suppressHydrationWarning>
             <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-                <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-                    <Providers>
-                        {children}
-                    </Providers>
+                <ThemeProvider
+                    attribute="class"
+                    defaultTheme="system"
+                    enableSystem
+                    disableTransitionOnChange
+                >
+                    <Providers>{children}</Providers>
                 </ThemeProvider>
+                {/* <NoiseOverlay /> */}
             </body>
         </html>
     );
