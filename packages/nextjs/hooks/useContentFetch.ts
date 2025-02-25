@@ -32,9 +32,10 @@ export function useContentFetch(index: number) {
     useEffect(() => {
         // If we have chain data, use it
         if (chainData) {
+            console.log("index", index, "chainData", chainData);
             setData({
                 content: chainData.content,
-                image: null, // Chain data doesn't include images yet
+                image: "https://i.pinimg.com/736x/ce/25/20/ce2520ca22bc5317176c18b437928525.jpg",
                 name: chainData.name,
                 description: chainData.description,
             });

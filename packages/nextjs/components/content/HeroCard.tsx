@@ -6,7 +6,12 @@ interface HeroCardProps {
 
 export function HeroCard({ fontSize }: HeroCardProps) {
     return (
-        <div className={cn("flex items-center justify-center w-full h-full px-12 pr-12 py-0", "")}>
+        <div
+            className={cn(
+                "flex items-center justify-center w-full h-full px-12 pr-12 py-2",
+                "select-none"
+            )}
+        >
             <div
                 className={cn(
                     "w-full h-full rounded-4xl bg-primary border-2 border-primary-foreground",

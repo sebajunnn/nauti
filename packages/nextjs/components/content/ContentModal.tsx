@@ -30,6 +30,7 @@ export function ContentModal({
     name = "",
     description = "",
 }: ContentModalProps) {
+    console.log("content", content);
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0 gap-0 font-redaction">

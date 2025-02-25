@@ -48,8 +48,8 @@ export default function GoldenSpiral({ className }: { className?: string }) {
 
     const calculateBaseSize = (height: number, squareSize: number) => {
         // Account for 1rem (16px) padding on each side (inset-2 = 0.5rem * 2 * 2)
-        const padding = 16;
-        const size = Math.min(window.innerHeight - padding, height - padding);
+        const padding = -16;
+        const size = Math.min(height - padding, window.innerHeight - padding);
         return (size * baseSizeRatio) / squareSize;
     };
 
