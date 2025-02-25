@@ -75,6 +75,11 @@ export default {
                 "5xl": "calc(var(--radius) * 5)",
                 "6xl": "calc(var(--radius) * 6)",
             },
+            fontFamily: {
+                redaction: ["var(--font-redaction)"],
+                sans: ["var(--font-geist-sans)"],
+                mono: ["var(--font-geist-mono)"],
+            },
         },
     },
     plugins: [require("tailwindcss-animate")],

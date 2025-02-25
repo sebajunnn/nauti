@@ -410,7 +410,7 @@ export default function GoldenSpiral({ className }: { className?: string }) {
     return (
         <div className={cn("relative w-full h-full overflow-hidden", className)}>
             {/* Canvas container - keep overflow hidden for canvas */}
-            <div className="absolute inset-2 rounded-4xl overflow-hidden bg-none">
+            <div className="absolute inset-2 rounded-4xl overflow-hidden bg-primary-foreground outline outline-3 outline-primary-foreground antialiased">
                 <canvas ref={canvasRef} className="w-full h-full" />
             </div>
 

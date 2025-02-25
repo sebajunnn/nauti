@@ -164,14 +164,14 @@ export function SpiralSquareContent({
                 startingSquareIndex === (squareIndex ?? 0) && zoomDepth === 0 ? (
                     <div
                         className={cn(
-                            "flex items-center justify-center w-full h-full pl-12 pr-12 py-0",
+                            "flex items-center justify-center w-full h-full px-12 pr-12 py-0",
                             ""
                         )}
                     >
                         <div
                             className={cn(
-                                "w-full h-full rounded-4xl bg-neutral-900/70",
-                                "flex items-center justify-between flex-col text-red-600"
+                                "w-full h-full rounded-4xl bg-primary border-2 border-primary-foreground",
+                                "flex items-center justify-between flex-col text-primary-foreground"
                             )}
                         >
                             <header className="flex flex-row items-center justify-between w-full px-4 py-2">
@@ -183,7 +183,9 @@ export function SpiralSquareContent({
                                 </h3>
                             </header>
                             <div className="flex-1 flex flex-row items-center justify-center overflow-hidden">
-                                <h1 className="text-[240px] font-bold w-full">Nauti</h1>
+                                <h1 className="text-[100px] w-full font-redaction font-[350]">
+                                    Nauti
+                                </h1>
                             </div>
                             <footer className="flex flex-row items-center justify-between w-full px-4 py-2">
                                 <h4 className="text-base font-bold">by nature</h4>
