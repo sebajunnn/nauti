@@ -30,10 +30,10 @@ export function ContentCard({ image, content, loading = false, onClick }: Conten
     }
 
     return (
-        <div className="relative w-full h-full p-1 pointer-events-none">
-            <div className="w-full h-full cursor-pointer pointer-events-auto" onClick={onClick}>
+        <div className="relative w-full h-full p-1">
+            <div className="w-full h-full cursor-pointer" onClick={onClick}>
                 <Image
-                    src={image}
+                    src={image || "/placeholder.jpg"}
                     alt={content}
                     width={FIXED_IMAGE_SIZE}
                     height={FIXED_IMAGE_SIZE}

@@ -12,7 +12,7 @@ interface ContentData {
 
 export function useContentFetch(index: number) {
     const [data, setData] = useState<ContentData | null>(null);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
     const { targetNetwork } = useTargetNetwork();
 
@@ -45,10 +45,6 @@ export function useContentFetch(index: number) {
 
         // If chain fetch failed or returned no data, try API
         if (isChainError || !chainData) {
-            setData(null);
-            setLoading(true);
-            setError(null);
-
             const fetchData = async () => {
                 try {
                     const res = await fetch(`/api/content?index=${index}`);
@@ -58,6 +54,7 @@ export function useContentFetch(index: number) {
                 } catch (error) {
                     console.error("Failed to fetch content:", error);
                     setError(error instanceof Error ? error : new Error("Failed to fetch content"));
+                    setData(null);
                 } finally {
                     setLoading(false);
                 }

@@ -141,7 +141,6 @@ export function GoldenSquareContainer({
                 willChange: "transform",
                 backfaceVisibility: "hidden",
                 perspective: 1000,
-                pointerEvents: "none",
             }}
         >
             {startingSquareIndex === (squareIndex ?? 0) && zoomDepth === 0 ? (
