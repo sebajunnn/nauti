@@ -1,12 +1,20 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
-import { SpiralSquareContent } from "@/components/goldenSpiral/SpiralSquareContent";
+import { GoldenSquareContainer } from "@/components/goldenSpiral/GoldenSquareContainer";
 import { cn, debounce } from "@/lib/utils";
 import { SpiralSquare, Vector, goldenSpiralConstants } from "@/types/golden-spiral";
 import { useSpiralStore } from "@/stores/useSpiralStore";
 import { IndexStateOverlay } from "@/components/debug/IndexStateOverlay";
 import { useSquareStore } from "@/stores/useSquareStore";
+import { ContentModal } from "@/components/content/ContentModal";
+
+interface ModalData {
+    content: string;
+    index: number;
+    name?: string;
+    description?: string;
+}
 
 export default function GoldenSpiral({ className }: { className?: string }) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -38,6 +46,8 @@ export default function GoldenSpiral({ className }: { className?: string }) {
     const [baseSize, setBaseSize] = useState(0);
     const baseSizeRatio = 1;
     const zoomDepthRef = useRef(0);
+    const [modalData, setModalData] = useState<ModalData | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const calculateBaseSize = (height: number, squareSize: number) => {
         // Account for 1rem (16px) padding on each side (inset-2 = 0.5rem * 2 * 2)
@@ -407,6 +417,11 @@ export default function GoldenSpiral({ className }: { className?: string }) {
         return { x: 0, y: 0 };
     }, [scale, startingOffset, baseSize]);
 
+    const handleCardClick = (data: ModalData) => {
+        setModalData(data);
+        setIsModalOpen(true);
+    };
+
     return (
         <div className={cn("relative w-full h-full overflow-hidden", className)}>
             {/* Canvas container - keep overflow hidden for canvas */}
@@ -417,7 +432,7 @@ export default function GoldenSpiral({ className }: { className?: string }) {
             {/* Squares container - keep overflow hidden */}
             <div className="absolute inset-2 overflow-hidden rounded-4xl  pointer-events-none">
                 {squares.map((square, index) => (
-                    <SpiralSquareContent
+                    <GoldenSquareContainer
                         key={square.id}
                         square={square}
                         squareIndex={index}
@@ -425,12 +440,23 @@ export default function GoldenSpiral({ className }: { className?: string }) {
                         scale={scale}
                         offset={finalOffset}
                         zoomDepth={zoomDepth}
+                        onCardClick={handleCardClick}
                     />
                 ))}
             </div>
 
             {/* Overlays */}
             <IndexStateOverlay squares={squares} handleReset={handleReset} />
+
+            {/* Content Modal */}
+            <ContentModal
+                open={isModalOpen}
+                onOpenChange={setIsModalOpen}
+                pageId={modalData?.index ?? 0}
+                content={modalData?.content}
+                name={modalData?.name}
+                description={modalData?.description}
+            />
         </div>
     );
 }
