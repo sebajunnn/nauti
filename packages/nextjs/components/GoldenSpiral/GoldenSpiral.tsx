@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
-import { SpiralSquareContent } from "@/components/goldenSpiral/SpiralSquareContent";
+import { SpiralSquareContent } from "@/components/GoldenSpiral/SpiralSquareContent";
 import { cn, debounce } from "@/lib/utils";
 import { SpiralSquare, Vector, goldenSpiralConstants } from "@/types/golden-spiral";
 import { useSpiralStore } from "@/stores/useSpiralStore";

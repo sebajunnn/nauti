@@ -6,11 +6,11 @@ const deployOnchainWebServer: DeployFunction = async function (hre: HardhatRunti
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  await deploy("OnchainWebServer_v5", {
+  await deploy("OnchainWebServer_v6", {
     from: deployer,
     log: true,
   });
 };
 
 export default deployOnchainWebServer;
-deployOnchainWebServer.tags = ["OnchainWebServer_v5"];
+deployOnchainWebServer.tags = ["OnchainWebServer_v6"];
