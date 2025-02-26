@@ -1,6 +1,5 @@
 import { SpiralSquare } from "@/types/golden-spiral";
-import { useSquareStore } from "@/stores/useSquareStore";
-import { Shell, Settings, HelpCircle } from "lucide-react";
+import { Shell, Settings } from "lucide-react";
 import { useSpiralStore } from "@/stores/useSpiralStore";
 import { useState } from "react";
 import { SearchInput } from "./SearchInput";
@@ -22,7 +21,6 @@ export function Navbar({
     squares: SpiralSquare[];
     handleReset: () => void;
 }) {
-    const { isSquareVisible, getIndex } = useSquareStore();
     const { zoomDepth } = useSpiralStore();
     const [showIndex, setShowIndex] = useState(false);
 
@@ -34,7 +32,7 @@ export function Navbar({
                     "h-full bg-primary-foreground text-primary rounded-xl overflow-hidden antialiased"
                 )}
             >
-                <Accordion type="single" collapsible>
+                <Accordion type="single" collapsible defaultValue="index-state">
                     <AccordionItem value="index-state" className="border-none h-full group/nav">
                         <div className="flex flex-col">
                             <div className="flex items-center gap-0 h-full bg-background">

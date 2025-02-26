@@ -4,6 +4,7 @@
 
 body {
     font-family: "Rubik", Arial, Helvetica, sans-serif;
+    letter-spacing: -0.02em;
 }
 
 /* Hide scrollbars but keep functionality */
