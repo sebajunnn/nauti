@@ -70,7 +70,8 @@ export function GoldenSquareContainer({
     const elementRef = useRef<HTMLDivElement>(null);
     const { updateSquareState, isSquareVisible, getIndex } = useSquareStore();
     const squareActualIndex = getIndex(square.id);
-    const { data, loading } = useContentFetch(squareActualIndex);
+    const isVisible = isSquareVisible(square.id);
+    const { data, loading } = useContentFetch(squareActualIndex, { zoomDepth, scale }, isVisible);
     const startingSquareIndex = goldenSpiralConstants.startingSquareIndex;
 
     // Memoize expensive calculations
@@ -111,21 +112,19 @@ export function GoldenSquareContainer({
 
         const isCurrentlyVisible = isSquareVisible(square.id);
 
-        if (visible !== isCurrentlyVisible) {
+        // Only update if there's a real change and the square is large enough to be meaningful
+        if (visible !== isCurrentlyVisible && !isTooSmall) {
             updateSquareState(square.id, visible, squareIndex || 0, isTooSmall);
         }
     }, [finalX, finalY, scaledSize, square.id, squareIndex, updateSquareState, isSquareVisible]);
 
-    // Debounce visibility check
-    const debouncedCheck = useDebounce(checkVisibility, 100);
-
     useEffect(() => {
         checkVisibility();
-        window.addEventListener("resize", debouncedCheck);
+        window.addEventListener("resize", checkVisibility);
         return () => {
-            window.removeEventListener("resize", debouncedCheck);
+            window.removeEventListener("resize", checkVisibility);
         };
-    }, [checkVisibility, debouncedCheck]);
+    }, [checkVisibility]);
 
     return (
         <div
