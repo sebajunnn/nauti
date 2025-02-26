@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { getContent, getBatchContent } from "@/app/actions/content";
 
 interface ContentData {
@@ -8,29 +8,51 @@ interface ContentData {
     description?: string;
 }
 
-interface ZoomState {
-    zoomDepth: number;
-    scale: number;
+// Global content cache with LRU implementation
+const MAX_CACHE_SIZE = 100; // Maximum number of items to store in cache
+class LRUCache<K, V> extends Map<K, V> {
+    private maxSize: number;
+
+    constructor(maxSize: number) {
+        super();
+        this.maxSize = maxSize;
+    }
+
+    get(key: K): V | undefined {
+        const item = super.get(key);
+        if (item) {
+            // Re-insert to put it at the end (most recently used)
+            this.delete(key);
+            this.set(key, item);
+        }
+        return item;
+    }
+
+    set(key: K, value: V): this {
+        if (this.has(key)) {
+            this.delete(key);
+        } else if (this.size >= this.maxSize) {
+            // Remove the first (least recently used) item
+            const firstKey = Array.from(this.keys())[0];
+            if (firstKey !== undefined) {
+                this.delete(firstKey);
+            }
+        }
+        super.set(key, value);
+        return this;
+    }
 }
 
-// Global content cache
-const contentCache = new Map<number, ContentData>();
+// Initialize the content cache with size limit
+const contentCache = new LRUCache<number, ContentData>(MAX_CACHE_SIZE);
 
 // Batch fetching queue
 let batchQueue: number[] = [];
 let batchTimeout: NodeJS.Timeout | null = null;
+const batchSize = 15; // Process immediately when queue reaches this size
 const maxBatchDelay = 16; // Only wait for one frame (60fps ≈ 16ms) max
 
-// Track which indices are currently being fetched
-const pendingFetches = new Set<number>();
-
-// Dynamic batch size based on zoom state
-function getBatchSize(zoomState: ZoomState) {
-    const isResetState = zoomState.zoomDepth === 0 && zoomState.scale === 1;
-    return isResetState ? 15 : 5;
-}
-
-async function processBatchQueue(zoomState: ZoomState) {
+async function processBatchQueue() {
     if (batchQueue.length === 0) return;
 
     const indices = [...batchQueue];
@@ -40,36 +62,29 @@ async function processBatchQueue(zoomState: ZoomState) {
         batchTimeout = null;
     }
 
-    // Add indices to pending set
-    indices.forEach((index) => pendingFetches.add(index));
-
     try {
         const results = await getBatchContent(indices);
         // Update cache with results
         Object.entries(results).forEach(([index, data]) => {
-            const numIndex = Number(index);
-            contentCache.set(numIndex, data);
-            pendingFetches.delete(numIndex);
+            contentCache.set(Number(index), data);
             // Notify all subscribers for this index
             const event = new CustomEvent(`content-${index}`, { detail: data });
             window.dispatchEvent(event);
         });
     } catch (error) {
         console.error("Batch processing failed:", error);
-        // Notify error to all subscribers and clean up pending fetches
+        // Notify error to all subscribers
         indices.forEach((index) => {
-            pendingFetches.delete(index);
             const event = new CustomEvent(`content-${index}-error`, { detail: error });
             window.dispatchEvent(event);
         });
     }
 }
 
-export function useContentFetch(index: number, zoomState: ZoomState, isVisible = true) {
+export function useContentFetch(index: number) {
     const [data, setData] = useState<ContentData | null>(() => contentCache.get(index) || null);
     const [loading, setLoading] = useState(!contentCache.has(index));
     const [error, setError] = useState<Error | null>(null);
-    const lastVisibleRef = useRef(isVisible);
 
     useEffect(() => {
         let isMounted = true;
@@ -81,36 +96,23 @@ export function useContentFetch(index: number, zoomState: ZoomState, isVisible =
             return;
         }
 
-        // Only fetch if the square is visible and wasn't already visible
-        // This prevents re-fetching when other props change
-        if (!isVisible || pendingFetches.has(index)) {
-            setLoading(false);
-            return;
-        }
+        setLoading(true);
 
-        // Only start loading if visibility actually changed to true
-        if (isVisible && !lastVisibleRef.current) {
-            setLoading(true);
+        // Add to batch queue
+        if (!batchQueue.includes(index)) {
+            batchQueue.push(index);
 
-            // Add to batch queue if not already being fetched
-            if (!batchQueue.includes(index) && !pendingFetches.has(index)) {
-                batchQueue.push(index);
-
-                // Process immediately if we have enough items
-                const currentBatchSize = getBatchSize(zoomState);
-                if (batchQueue.length >= currentBatchSize) {
-                    processBatchQueue(zoomState);
-                } else {
-                    // Otherwise wait for a short time for more items
-                    if (batchTimeout) {
-                        clearTimeout(batchTimeout);
-                    }
-                    batchTimeout = setTimeout(() => processBatchQueue(zoomState), maxBatchDelay);
+            // Process immediately if we have enough items
+            if (batchQueue.length >= batchSize) {
+                processBatchQueue();
+            } else {
+                // Otherwise wait for a short time for more items
+                if (batchTimeout) {
+                    clearTimeout(batchTimeout);
                 }
+                batchTimeout = setTimeout(processBatchQueue, maxBatchDelay);
             }
         }
-
-        lastVisibleRef.current = isVisible;
 
         // Listen for content updates
         const handleContent = (e: CustomEvent<ContentData>) => {
@@ -137,7 +139,7 @@ export function useContentFetch(index: number, zoomState: ZoomState, isVisible =
             window.removeEventListener(`content-${index}` as any, handleContent as any);
             window.removeEventListener(`content-${index}-error` as any, handleError as any);
         };
-    }, [index, zoomState, isVisible]);
+    }, [index]);
 
     return { data, loading, error };
 }

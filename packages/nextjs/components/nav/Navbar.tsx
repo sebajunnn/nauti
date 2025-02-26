@@ -35,15 +35,26 @@ export function Navbar({
                 <Accordion type="single" collapsible defaultValue="index-state">
                     <AccordionItem value="index-state" className="border-none h-full group/nav">
                         <div className="flex flex-col">
-                            <div className="flex items-center gap-0 h-full bg-background">
+                            <div
+                                className={cn(
+                                    "flex items-center gap-0 h-full bg-none",
+                                    "transition-colors duration-200 ease-in-out"
+                                )}
+                            >
                                 <button
-                                    className={cn("flex items-center gap-2h-full", "pl-4 pr-3")}
+                                    className={cn(
+                                        "flex items-center gap-2 h-8",
+                                        "pl-4 pr-3 ",
+                                        "bg-background hover:bg-chart-1",
+                                        "text-black hover:text-background",
+                                        "transition-colors duration-200 ease-in-out"
+                                    )}
                                     onClick={handleReset}
                                 >
                                     <h1
                                         className={cn(
                                             "translate-y-[1px] text-3xl leading-none",
-                                            "font-redaction font-[200] text-bold text-black"
+                                            "font-redaction font-[200] text-bold "
                                         )}
                                     >
                                         Nauti
@@ -57,7 +68,7 @@ export function Navbar({
                                 >
                                     <div className="flex items-center gap-1 text-primary translate-y-[1px] pr-1">
                                         <Shell size={16} />
-                                        <span className="text-base">{zoomDepth}</span>
+                                        <span className="text-base min-w-2">{zoomDepth}</span>
                                     </div>
                                     <SearchInput className="w-28 h-6" />
                                     <div className="group">
