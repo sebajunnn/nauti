@@ -158,6 +158,7 @@ export function GoldenSquareContainer({
                             description: data?.description,
                         })
                     }
+                    index={squareActualIndex}
                 />
             )}
         </div>

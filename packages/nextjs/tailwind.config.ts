@@ -77,10 +77,39 @@ export default {
             },
             fontFamily: {
                 redaction: ["var(--font-redaction)"],
-                sans: ["var(--font-geist-sans)"],
-                mono: ["var(--font-geist-mono)"],
+                sprat: ["var(--font-sprat)"],
+                rubik: ["var(--font-rubik)"],
+            },
+            keyframes: {
+                "accordion-down": {
+                    from: {
+                        height: "0",
+                    },
+                    to: {
+                        height: "var(--radix-accordion-content-height)",
+                    },
+                },
+                "accordion-up": {
+                    from: {
+                        height: "var(--radix-accordion-content-height)",
+                    },
+                    to: {
+                        height: "0",
+                    },
+                },
+            },
+            animation: {
+                "accordion-down": "accordion-down 0.2s ease-out",
+                "accordion-up": "accordion-up 0.2s ease-out",
             },
         },
     },
     plugins: [require("tailwindcss-animate")],
+    variants: {
+        extend: {
+            backgroundColor: ["active"],
+            textColor: ["active"],
+            scale: ["active"],
+        },
+    },
 } satisfies Config;

@@ -8,6 +8,8 @@ import { useSpiralStore } from "@/stores/useSpiralStore";
 import { IndexStateOverlay } from "@/components/debug/IndexStateOverlay";
 import { useSquareStore } from "@/stores/useSquareStore";
 import { ContentModal } from "@/components/content/ContentModal";
+import { Navbar } from "@/components/nav/Navbar";
+import { SearchInput } from "@/components/nav/SearchInput";
 
 interface ModalData {
     content: string;
@@ -286,10 +288,8 @@ export default function GoldenSpiral({ className }: { className?: string }) {
                 ))}
             </div>
 
-            {/* Overlays */}
-            <IndexStateOverlay squares={squares} handleReset={handleReset} />
+            <Navbar squares={squares} handleReset={handleReset} />
 
-            {/* Content Modal */}
             <ContentModal
                 open={isModalOpen}
                 onOpenChange={setIsModalOpen}

@@ -16,7 +16,7 @@ export function IndexStateOverlay({
     const { zoomDepth } = useSpiralStore();
 
     return (
-        <div className="absolute top-7 right-7 z-10">
+        <div className="absolute top-[40%] right-7 z-10">
             <div
                 className="gap-0 bg-background text-foreground rounded-2xl overflow-hidden shadow-lg"
                 style={{ maxHeight: isOpen ? "fit-content" : "48px" }}

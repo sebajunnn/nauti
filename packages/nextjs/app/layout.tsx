@@ -1,17 +1,25 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Providers } from "@/components/Providers";
-import { NoiseOverlay } from "@/components/NoiseOverlay";
+import "@rainbow-me/rainbowkit/styles.css";
 
-// <div className="font-redaction font-[100]">Redaction 100</div>
-// <div className="font-redaction font-[200]">Redaction 70</div>
-// <div className="font-redaction font-[300]">Redaction 50</div>
-// <div className="font-redaction font-[350]">Redaction 35</div>
-// <div className="font-redaction font-[400]">Redaction 20</div>
-// <div className="font-redaction font-[500]">Redaction 10</div>
+const rubik = localFont({
+    src: [
+        {
+            path: "./fonts/rubik/Rubik[wght].ttf",
+            style: "normal",
+        },
+        {
+            path: "./fonts/rubik/Rubik-Italic[wght].ttf",
+            style: "italic",
+        },
+    ],
+    variable: "--font-rubik",
+    display: "swap",
+});
+
 const redaction = localFont({
     variable: "--font-redaction",
     display: "swap",
@@ -124,14 +132,9 @@ const redaction = localFont({
     ],
 });
 
-const geistSans = Geist({
-    variable: "--font-geist-sans",
-    subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-    variable: "--font-geist-mono",
-    subsets: ["latin"],
+const sprat = localFont({
+    src: "./fonts/sprat/Sprat_Variable.ttf",
+    variable: "--font-sprat",
 });
 
 export const metadata: Metadata = {
@@ -145,10 +148,12 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="en" suppressHydrationWarning>
-            <body
-                className={`${redaction.variable} ${geistSans.variable} ${geistMono.variable} antialiased font-redaction`}
-            >
+        <html
+            lang="en"
+            suppressHydrationWarning
+            className={`${redaction.variable} ${sprat.variable} ${rubik.variable} antialiased font-rubik`}
+        >
+            <body>
                 <ThemeProvider
                     attribute="class"
                     defaultTheme="light"

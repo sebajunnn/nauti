@@ -6,13 +6,14 @@ interface ContentCardProps {
     content: string;
     loading?: boolean;
     onClick: () => void;
+    index: number;
 }
 
 const FIXED_IMAGE_SIZE = 400;
 const FIXED_QUALITY = 100;
 const NOISE_SVG = `url("data:image/svg+xml,%3Csvg viewBox='0 0 2048 2048' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.35' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`;
 
-export function ContentCard({ image, content, loading = false, onClick }: ContentCardProps) {
+export function ContentCard({ image, content, loading = false, onClick, index }: ContentCardProps) {
     if (loading) {
         return (
             <div className="relative w-full h-full p-1 flex items-center justify-center">
@@ -39,6 +40,7 @@ export function ContentCard({ image, content, loading = false, onClick }: Conten
                     height={FIXED_IMAGE_SIZE}
                     className="w-full h-full object-cover"
                     quality={FIXED_QUALITY}
+                    draggable={false}
                     loading="lazy"
                     placeholder="blur"
                     blurDataURL={`data:image/svg+xml;base64,${btoa(
@@ -57,6 +59,9 @@ export function ContentCard({ image, content, loading = false, onClick }: Conten
                     filter: "contrast(320%) brightness(100%)",
                 }}
             />
+            <div className="absolute bottom-0 left-0 p-2">
+                <h1 className="text-xs text-primary">{index}</h1>
+            </div>
         </div>
     );
 }
