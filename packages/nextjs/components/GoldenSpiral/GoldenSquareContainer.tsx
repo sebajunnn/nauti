@@ -1,28 +1,36 @@
 import Image from "next/image";
-import { useEffect, useRef, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useSquareStore } from "@/stores/useSquareStore";
-import { SpiralSquare, Vector } from "@/types/golden-spiral";
+import { goldenSpiralConstants, SpiralSquare, Vector } from "@/types/golden-spiral";
 import { cn } from "@/lib/utils";
+import { Textfit } from "react-textfit";
+import { HeroCard } from "@/components/content/HeroCard";
+import { ContentCard } from "@/components/content/ContentCard";
+import { useContentFetch } from "@/hooks/useContentFetch";
+import { ContentModal } from "@/components/content/ContentModal";
 
-interface SpiralSquareContentProps {
+interface GoldenSquareContainerProps {
     square: SpiralSquare;
     squareIndex?: number;
     baseSize: number;
     scale: number;
     offset: Vector;
     zoomDepth: number;
+    onCardClick: (data: ModalData) => void;
 }
 
-interface ContentData {
+interface ModalData {
     content: string;
-    image: string;
-    index: string;
+    index: number;
+    name?: string;
+    description?: string;
 }
 
 const LOW_QUALITY = 25;
 const HIGH_QUALITY = 75;
 const FIXED_IMAGE_SIZE = 400;
 const FIXED_QUALITY = 100;
+const NOISE_SVG = `url("data:image/svg+xml,%3Csvg viewBox='0 0 2048 2048' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.35' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`;
 
 // Custom debounce hook
 function useDebounce<T extends (...args: any[]) => void>(callback: T, delay: number) {
@@ -50,28 +58,29 @@ function useDebounce<T extends (...args: any[]) => void>(callback: T, delay: num
     );
 }
 
-export function SpiralSquareContent({
+export function GoldenSquareContainer({
     square,
     squareIndex,
     baseSize,
     scale,
     offset,
     zoomDepth,
-}: SpiralSquareContentProps) {
+    onCardClick,
+}: GoldenSquareContainerProps) {
     const elementRef = useRef<HTMLDivElement>(null);
     const { updateSquareState, isSquareVisible, getIndex } = useSquareStore();
     const squareActualIndex = getIndex(square.id);
-    const [data, setData] = useState<ContentData>();
-    const [loading, setLoading] = useState(false);
+    const { data, loading } = useContentFetch(squareActualIndex);
+    const startingSquareIndex = goldenSpiralConstants.startingSquareIndex;
 
     // Memoize expensive calculations
-    const { size, finalX, finalY, scaledSize, imageSize } = useMemo(() => {
+    const { finalX, finalY, scaledSize, fontSize } = useMemo(() => {
         const size = square.size * baseSize;
         const finalX = square.x * baseSize * scale + offset.x;
         const finalY = square.y * baseSize * scale + offset.y;
         const scaledSize = size * scale;
-        const imageSize = Math.min(Math.ceil(scaledSize), 2048);
-        return { size, finalX, finalY, scaledSize, imageSize };
+        const fontSize = Math.max(12, Math.floor(scaledSize * 0.02));
+        return { finalX, finalY, scaledSize, fontSize };
     }, [square, baseSize, scale, offset]);
 
     const checkVisibility = useCallback(() => {
@@ -108,7 +117,7 @@ export function SpiralSquareContent({
     }, [finalX, finalY, scaledSize, square.id, squareIndex, updateSquareState, isSquareVisible]);
 
     // Debounce visibility check
-    const debouncedCheck = useDebounce(checkVisibility, 100);
+    const debouncedCheck = useDebounce(checkVisibility, 10);
 
     useEffect(() => {
         checkVisibility();
@@ -117,25 +126,6 @@ export function SpiralSquareContent({
             window.removeEventListener("resize", debouncedCheck);
         };
     }, [checkVisibility, debouncedCheck]);
-
-    // Only fetch when visible
-    useEffect(() => {
-        setData(undefined);
-        setLoading(true);
-
-        const fetchData = async () => {
-            try {
-                const res = await fetch(`/api/content?index=${squareActualIndex}`);
-                const data = await res.json();
-                setData(data);
-            } catch (error) {
-                console.error("Failed to fetch content:", error);
-            }
-            setLoading(false);
-        };
-
-        fetchData();
-    }, [squareActualIndex]);
 
     return (
         <div
@@ -151,57 +141,25 @@ export function SpiralSquareContent({
                 willChange: "transform",
                 backfaceVisibility: "hidden",
                 perspective: 1000,
-                pointerEvents: "none",
             }}
         >
-            {/* {inView && ( // Only render image when in view */}
-            {/* {true && ( // Only render image when in view
-            <Image
-                src="/test.jpg"
-                alt="Logo"
-                width={imageSize}
-                height={imageSize}
-                className="w-full h-full object-cover"
-                quality={scaledSize > 1000 ? 75 : 60} // Adjust quality based on size
-                // loading="lazy"
-                sizes={`${scaledSize}px`} // Help browser optimize loading
-                style={{
-                    transformOrigin: "center",
-                    backfaceVisibility: "hidden",
-                }}
-            />
-        )} */}
-            {loading ? (
-                <div className="flex items-center justify-center w-full h-full bg-white/10">
-                    <span>...</span>
-                </div>
-            ) : data ? (
-                <div className="relative w-full h-full">
-                    <Image
-                        src={data.image}
-                        alt={data.content}
-                        width={FIXED_IMAGE_SIZE}
-                        height={FIXED_IMAGE_SIZE}
-                        className="w-full h-full object-cover"
-                        quality={FIXED_QUALITY}
-                        loading="lazy"
-                        placeholder="blur"
-                        blurDataURL={`data:image/svg+xml;base64,${btoa(
-                            '<svg width="400" height="400" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="#666"/></svg>'
-                        )}`}
-                        style={{
-                            transformOrigin: "center",
-                            backfaceVisibility: "hidden",
-                        }}
-                    />
-                    <div className="absolute top-0 left-0 flex items-center justify-center w-full h-full bg-black/0 text-white">
-                        <h1>{data.index}</h1>
-                    </div>
-                </div>
+            {startingSquareIndex === (squareIndex ?? 0) && zoomDepth === 0 ? (
+                <HeroCard fontSize={fontSize} />
             ) : (
-                <div className="flex items-center justify-center w-full h-full">
-                    <span>{squareActualIndex}</span>
-                </div>
+                <ContentCard
+                    image={data?.image || null}
+                    content={data?.content || ""}
+                    loading={loading}
+                    onClick={() =>
+                        onCardClick({
+                            content: data?.content || "",
+                            index: squareActualIndex,
+                            name: data?.name,
+                            description: data?.description,
+                        })
+                    }
+                    index={squareActualIndex}
+                />
             )}
         </div>
     );
