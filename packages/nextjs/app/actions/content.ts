@@ -21,19 +21,44 @@ const publicClient = createPublicClient({
     },
 });
 
+const decodeBase64TokenURI = (tokenURI: string): ContentData => {
+    // Remove the "data:application/json;base64," prefix
+    const base64Json = tokenURI.replace('data:application/json;base64,', '');
+
+    // Decode base64 to get the JSON string
+    const jsonString = Buffer.from(base64Json, 'base64').toString();
+
+    // Parse the JSON
+    const metadata = JSON.parse(jsonString);
+
+    // Extract the HTML content from animation_url
+    // animation_url is in format "data:text/html;base64,<base64-content>"
+    const htmlBase64 = metadata.animation_url.replace('data:text/html;base64,', '');
+    const content = Buffer.from(htmlBase64, 'base64').toString();
+
+    return {
+        content,
+        image: metadata.image || null,
+        name: metadata.name,
+        description: metadata.description,
+    };
+}
+
 async function getChainContent(index: number): Promise<ContentData | null> {
     try {
         const chainData = await publicClient.readContract({
-            address: deployedContracts[31337].OnchainWebServerMetadata_v2.address as `0x${string}`,
-            functionName: "pages",
-            abi: deployedContracts[31337].OnchainWebServerMetadata_v2.abi,
+            address: deployedContracts[31337].OnchainWebServer_v8.address as `0x${string}`,
+            functionName: "tokenURI",
+            abi: deployedContracts[31337].OnchainWebServer_v8.abi,
             args: [BigInt(index)],
         });
+        const metadata = decodeBase64TokenURI(chainData);
+
         return {
-            content: chainData[0],
-            name: chainData[1],
-            description: chainData[2],
-            image: !chainData[3] || chainData[3] === "" ? "https://i.pinimg.com/736x/ce/25/20/ce2520ca22bc5317176c18b437928525.jpg" : chainData[3],
+            content: metadata.content,
+            name: metadata.name,
+            description: metadata.description,
+            image: metadata.image,
         };
     } catch (error) {
         return null;
@@ -75,9 +100,9 @@ export async function getBatchContent(indices: number[]): Promise<Record<number,
         // Try blockchain first using multicall
         const chainDataPromises = indices.map((index) =>
             publicClient.readContract({
-                address: deployedContracts[31337].OnchainWebServerMetadata_v2.address as `0x${string}`,
-                functionName: "pages",
-                abi: deployedContracts[31337].OnchainWebServerMetadata_v2.abi,
+                address: deployedContracts[31337].OnchainWebServer_v8.address as `0x${string}`,
+                functionName: "tokenURI",
+                abi: deployedContracts[31337].OnchainWebServer_v8.abi,
                 args: [BigInt(index)],
             })
         );
@@ -90,11 +115,12 @@ export async function getBatchContent(indices: number[]): Promise<Record<number,
 
         results.forEach((result, idx) => {
             if (result.status === "fulfilled") {
+                const metadata = decodeBase64TokenURI(result.value);
                 contentMap[indices[idx]] = {
-                    content: result.value[0],
-                    name: result.value[1],
-                    description: result.value[2],
-                    image: !result.value || result.value[3] === "" ? "https://i.pinimg.com/736x/ce/25/20/ce2520ca22bc5317176c18b437928525.jpg" : result.value[3]
+                    content: metadata.content,
+                    name: metadata.name,
+                    description: metadata.description,
+                    image: !metadata.image || metadata.image === "" ? "https://i.pinimg.com/736x/ce/25/20/ce2520ca22bc5317176c18b437928525.jpg" : metadata.image
                 };
             } else {
                 fallbackIndices.push(indices[idx]);

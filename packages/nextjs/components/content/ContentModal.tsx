@@ -34,7 +34,6 @@ export function ContentModal({
 }: ContentModalProps) {
     const [isFullscreen, setIsFullscreen] = useState(false);
 
-    console.log("content", content);
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogOverlay className={cn("bg-black/20 backdrop-brightness-125")} />
