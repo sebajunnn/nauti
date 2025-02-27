@@ -34,38 +34,24 @@ export function ContentCard({ image, content, loading = false, onClick, index }:
     return (
         <div className="relative w-full h-full p-1">
             <div className="w-full h-full cursor-pointer" onClick={onClick}>
-                {content
-                    ? <Card className="bg-background">
-                        <CardContent className="p-0 aspect-square">
-                            <div className="w-full h-full bg-white rounded-lg overflow-hidden">
-                                <iframe
-                                    srcDoc={content}
-                                    className="w-full h-full border-0"
-                                    title="preview"
-                                    sandbox="allow-scripts allow-same-origin"
-                                />
-                            </div>
-                        </CardContent>
-                    </Card>
-                    : <Image
-                        src={image || "/placeholder.jpg"}
-                        alt={content}
-                        width={FIXED_IMAGE_SIZE}
-                        height={FIXED_IMAGE_SIZE}
-                        className="w-full h-full object-cover"
-                        quality={FIXED_QUALITY}
-                        draggable={false}
-                        loading="lazy"
-                        placeholder="blur"
-                        blurDataURL={`data:image/svg+xml;base64,${btoa(
-                            '<svg width="400" height="400" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="#666"/></svg>'
-                        )}`}
-                        style={{
-                            transformOrigin: "center",
-                            backfaceVisibility: "hidden",
-                        }}
-                    />}
-
+                <Image
+                    src={image || "/placeholder.jpg"}
+                    alt={content}
+                    width={FIXED_IMAGE_SIZE}
+                    height={FIXED_IMAGE_SIZE}
+                    className="w-full h-full object-cover"
+                    quality={FIXED_QUALITY}
+                    draggable={false}
+                    loading="lazy"
+                    placeholder="blur"
+                    blurDataURL={`data:image/svg+xml;base64,${btoa(
+                        '<svg width="400" height="400" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="#666"/></svg>'
+                    )}`}
+                    style={{
+                        transformOrigin: "center",
+                        backfaceVisibility: "hidden",
+                    }}
+                />
             </div>
             <div
                 className="absolute inset-1 pointer-events-none opacity-[0.5] mix-blend-overlay"

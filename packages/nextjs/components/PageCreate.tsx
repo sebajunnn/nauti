@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Upload } from "lucide-react";
+import { Loader2, Upload, Image as ImageIcon } from "lucide-react";
 import * as Babel from "@babel/standalone";
 import { html } from "@codemirror/lang-html";
 import { javascript } from "@codemirror/lang-javascript";
@@ -18,6 +18,7 @@ import { parseEther } from "viem";
 import { useWriteContract } from "wagmi";
 import { useDropzone } from "react-dropzone";
 import { notification } from "@/utils/scaffold-eth";
+import Image from "next/image";
 
 export default function PageCreate() {
     const [content, setContent] = useState("<h1>Hello, Web3!</h1>");
@@ -31,6 +32,8 @@ export default function PageCreate() {
     const [description, setDescription] = useState("");
     const [uploadedGlbUrl, setUploadedGlbUrl] = useState<string | null>(null);
     const [isUploading, setIsUploading] = useState(false);
+    const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
+    const [isImageUploading, setIsImageUploading] = useState(false);
 
     const { writeContract } = useWriteContract();
 
@@ -40,15 +43,25 @@ export default function PageCreate() {
             return;
         }
 
+        if (!uploadedImageUrl) {
+            setError("Please upload a preview image");
+            return;
+        }
+
         setIsLoading(true);
         setError(null);
 
         try {
             await writeContract({
-                address: deployedContracts[31337].OnchainWebServer_v5.address,
-                abi: deployedContracts[31337].OnchainWebServer_v5.abi,
+                address: deployedContracts[31337].OnchainWebServer_v8.address,
+                abi: deployedContracts[31337].OnchainWebServer_v8.abi,
                 functionName: "mintPage",
-                args: [(language === "jsx" || language === "tsx") ? compiledCode : content, name, description],
+                args: [
+                    (language === "jsx" || language === "tsx") ? compiledCode : content,
+                    name,
+                    description,
+                    uploadedImageUrl
+                ],
                 value: parseEther("0.01"),
             });
             setError(null);
@@ -172,6 +185,46 @@ export default function PageCreate() {
         maxFiles: 1,
     });
 
+    const onImageDrop = useCallback(async (acceptedFiles: File[]) => {
+        const file = acceptedFiles[0];
+        if (!file) return;
+
+        setIsImageUploading(true);
+        setError(null);
+
+        try {
+            const formData = new FormData();
+            formData.append("file", file);
+
+            const response = await fetch("/api/upload", {
+                method: "POST",
+                body: formData,
+            });
+
+            if (!response.ok) {
+                notification.error("Image upload failed");
+                return;
+            }
+
+            const data = await response.json();
+            const ipfsUrl = `https://ipfs.io/ipfs/${data.IpfsHash}`;
+            setUploadedImageUrl(ipfsUrl);
+        } catch (err) {
+            console.error("Upload error:", err);
+            setError("Failed to upload image");
+        } finally {
+            setIsImageUploading(false);
+        }
+    }, []);
+
+    const { getRootProps: getImageRootProps, getInputProps: getImageInputProps, isDragActive: isImageDragActive } = useDropzone({
+        onDrop: onImageDrop,
+        accept: {
+            'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp'],
+        },
+        maxFiles: 1,
+    });
+
     return (
         <div className="container mx-auto p-6 space-y-6">
             <Card>
@@ -237,6 +290,36 @@ export default function PageCreate() {
                                 onChange={(e) => setDescription(e.target.value)}
                                 className="min-h-[100px]"
                             />
+
+                            {/* Image Upload Section */}
+                            <div
+                                {...getImageRootProps()}
+                                className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
+                                    ${isImageDragActive ? "border-primary bg-primary/10" : "border-muted-foreground/25"}
+                                    ${isImageUploading ? "opacity-50 pointer-events-none" : ""}`}
+                            >
+                                <input {...getImageInputProps()} />
+                                <ImageIcon className="w-8 h-8 mx-auto mb-4 text-muted-foreground" />
+                                {isImageUploading ? (
+                                    <div className="flex items-center justify-center gap-2">
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        <p>Uploading thumbnail image...</p>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <p className="text-sm font-medium">
+                                            {uploadedImageUrl ? "Drop to replace thumbnail image" : "Drop thumbnail image here or click to select"}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground mt-1">
+                                            {uploadedImageUrl ? (
+                                                <Image src={uploadedImageUrl} alt="Preview" className="mt-2 mx-auto" width={1024} height={1024} />
+                                            ) : (
+                                                "Supports PNG, JPG, GIF, WEBP"
+                                            )}
+                                        </p>
+                                    </>
+                                )}
+                            </div>
 
                             {/* GLB file url */}
                             {language === "glb" && uploadedGlbUrl && (

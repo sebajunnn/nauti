@@ -24,9 +24,9 @@ const publicClient = createPublicClient({
 async function getChainContent(index: number): Promise<ContentData | null> {
     try {
         const chainData = await publicClient.readContract({
-            address: deployedContracts[31337].OnchainWebServer_v5.address as `0x${string}`,
+            address: deployedContracts[31337].OnchainWebServer_v8.address as `0x${string}`,
             functionName: "getPage",
-            abi: deployedContracts[31337].OnchainWebServer_v5.abi,
+            abi: deployedContracts[31337].OnchainWebServer_v8.abi,
             args: [BigInt(index)],
         });
 
@@ -53,8 +53,7 @@ async function getApiContent(index: number): Promise<ContentData> {
     } catch (error) {
         console.error(`Failed to fetch content for index ${index}:`, error);
         throw new Error(
-            `Failed to fetch content for index ${index}: ${
-                error instanceof Error ? error.message : "Unknown error"
+            `Failed to fetch content for index ${index}: ${error instanceof Error ? error.message : "Unknown error"
             }`
         );
     }
@@ -74,19 +73,17 @@ export async function getContent(index: number): Promise<ContentData> {
 // New batch content fetch function
 export async function getBatchContent(indices: number[]): Promise<Record<number, ContentData>> {
     try {
-        console.log("Fetching batch content", indices);
         // Try blockchain first using multicall
         const chainDataPromises = indices.map((index) =>
             publicClient.readContract({
-                address: deployedContracts[31337].OnchainWebServer_v5.address as `0x${string}`,
+                address: deployedContracts[31337].OnchainWebServer_v8.address as `0x${string}`,
                 functionName: "getPage",
-                abi: deployedContracts[31337].OnchainWebServer_v5.abi,
+                abi: deployedContracts[31337].OnchainWebServer_v8.abi,
                 args: [BigInt(index)],
             })
         );
 
         const results = await Promise.allSettled(chainDataPromises);
-        console.log("Chain data fetched");
         const contentMap: Record<number, ContentData> = {};
 
         // Process results and prepare API fallback array

@@ -67,7 +67,6 @@ export function GoldenSquareContainer({
     zoomDepth,
     onCardClick,
 }: GoldenSquareContainerProps) {
-    console.log("Rendering GoldenSquareContainer", square.id);
     const elementRef = useRef<HTMLDivElement>(null);
     const { updateSquareState, isSquareVisible, getIndex } = useSquareStore();
     const squareActualIndex = getIndex(square.id);
