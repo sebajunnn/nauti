@@ -90,4 +90,12 @@ contract OnchainWebServer_v8 is ERC721, Ownable {
     function setMetadataContract(address _metadataContract) external onlyOwner {
         metadataContract = _metadataContract;
     }
+
+    /**
+     * @notice Returns the total number of tokens minted
+     * @return uint256 The current token count
+     */
+    function totalSupply() public view returns (uint256) {
+        return _tokenIds;
+    }
 }
