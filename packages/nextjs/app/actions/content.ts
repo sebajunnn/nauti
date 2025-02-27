@@ -42,9 +42,22 @@ async function getChainContent(index: number): Promise<ContentData | null> {
 }
 
 async function getApiContent(index: number): Promise<ContentData> {
-    const res = await fetch(`/api/content?index=${index}`);
-    if (!res.ok) throw new Error("Failed to fetch content from API");
-    return res.json();
+    try {
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+        const res = await fetch(`${baseUrl}/api/content?index=${index}`);
+        if (!res.ok) {
+            const errorText = await res.text();
+            throw new Error(`API request failed with status ${res.status}: ${errorText}`);
+        }
+        return res.json();
+    } catch (error) {
+        console.error(`Failed to fetch content for index ${index}:`, error);
+        throw new Error(
+            `Failed to fetch content for index ${index}: ${
+                error instanceof Error ? error.message : "Unknown error"
+            }`
+        );
+    }
 }
 
 export async function getContent(index: number): Promise<ContentData> {
