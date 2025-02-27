@@ -13,9 +13,47 @@ body {
     scrollbar-width: none; /* Firefox */
 }
 
-/* Chrome, Safari and Opera */
-*::-webkit-scrollbar {
-    display: none;
+/* Comprehensive webkit scrollbar hiding */
+::-webkit-scrollbar {
+    width: 0px;
+    height: 0px;
+}
+
+::-webkit-scrollbar-button {
+    width: 0px;
+    height: 0px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: transparent;
+    border: 0px none;
+    border-radius: 0px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb:active {
+    background: transparent;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+    border: 0px none;
+    border-radius: 0px;
+}
+
+::-webkit-scrollbar-track:hover {
+    background: transparent;
+}
+
+::-webkit-scrollbar-track:active {
+    background: transparent;
+}
+
+::-webkit-scrollbar-corner {
+    background: transparent;
 }
 
 /* Hide number input spinners */
@@ -45,7 +83,7 @@ input[type="number"] {
         --muted-foreground: 240 3.8% 46.1%;
         --accent: 197 89% 34%;
         --accent-foreground: 240 5.9% 10%;
-        --destructive: 0 84.2% 60.2%;
+        --destructive: 357 87% 45%;
         --destructive-foreground: 0 0% 98%;
         --border: 240 5.9% 90%;
         --input: 240 5.9% 90%;
@@ -87,16 +125,7 @@ input[type="number"] {
 
 @layer base {
     * {
-        @apply border-border;
-    }
-    body {
-        @apply bg-background text-foreground;
-    }
-}
-
-@layer base {
-    * {
-        @apply border-border outline-ring/50;
+        @apply border-border outline-none;
     }
     body {
         @apply bg-background text-foreground;

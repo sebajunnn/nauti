@@ -9,18 +9,19 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
 import { useReadContract } from "wagmi";
 import { useTargetNetwork } from "@/hooks";
-
+import Image from "next/image";
 export default function PageView() {
     const [content, setContent] = useState("<h1>Hello, Web3!</h1>");
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
+    const [imageUrl, setImageUrl] = useState("");
     const [pageId, setPageId] = useState(0);
     const { targetNetwork } = useTargetNetwork();
 
     const { isFetching, refetch, error, data } = useReadContract({
-        address: deployedContracts[31337].OnchainWebServer_v5.address,
-        functionName: "getPage",
-        abi: deployedContracts[31337].OnchainWebServer_v5.abi,
+        address: deployedContracts[31337].OnchainWebServerMetadata_v2.address,
+        functionName: "pages",
+        abi: deployedContracts[31337].OnchainWebServerMetadata_v2.abi,
         args: [BigInt(pageId)],
         chainId: targetNetwork.id,
         query: {
@@ -31,9 +32,10 @@ export default function PageView() {
 
     useEffect(() => {
         if (data) {
-            setContent(data.content);
-            setName(data.name);
-            setDescription(data.description);
+            setContent(data[0]);
+            setName(data[1]);
+            setDescription(data[2]);
+            setImageUrl(data[3]);
         }
     }, [data]);
 
@@ -90,6 +92,12 @@ export default function PageView() {
                         <div className="space-y-2">
                             <h3 className="text-lg font-semibold">{name}</h3>
                             {description && <p className="text-muted-foreground">{description}</p>}
+                        </div>
+                    )}
+
+                    {imageUrl && (
+                        <div className="w-full h-full bg-white rounded-lg overflow-hidden">
+                            <Image src={imageUrl} alt="Preview" className="w-full h-full" width={1024} height={1024} />
                         </div>
                     )}
 
