@@ -108,7 +108,7 @@ export function ContentCard({
                     className="text-primary text-right font-bold"
                     style={{ fontSize: `${scaledSize * 0.025}px` }}
                 >
-                    {name || "story undefined"}
+                    story: {name || "undefined"}
                 </h3>
             </div>
         </div>
