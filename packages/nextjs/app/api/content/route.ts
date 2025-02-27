@@ -9,7 +9,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
         index: index,
-        content: `Content for index ${index}`,
+        content: "",
         image: `https://picsum.photos/seed/${index}/1000`,
     });
 }

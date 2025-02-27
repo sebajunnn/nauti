@@ -1,19 +1,35 @@
 import Image from "next/image";
 import { Loader2 } from "lucide-react";
+import { getRandomColor } from "@/utils";
+import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
+import { Circle } from "lucide-react";
 
 interface ContentCardProps {
     image: string | null;
+    name: string;
     content: string;
     loading?: boolean;
     onClick: () => void;
     index: number;
+    scaledSize: number;
 }
 
 const FIXED_IMAGE_SIZE = 400;
 const FIXED_QUALITY = 100;
 const NOISE_SVG = `url("data:image/svg+xml,%3Csvg viewBox='0 0 2048 2048' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.35' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`;
 
-export function ContentCard({ image, content, loading = false, onClick, index }: ContentCardProps) {
+export function ContentCard({
+    image,
+    name,
+    content,
+    loading = false,
+    onClick,
+    index,
+    scaledSize,
+}: ContentCardProps) {
+    const [randomColor] = useState(getRandomColor());
+
     if (loading) {
         return (
             <div className="relative w-full h-full p-1 flex items-center justify-center">
@@ -31,8 +47,8 @@ export function ContentCard({ image, content, loading = false, onClick, index }:
     }
 
     return (
-        <div className="relative w-full h-full p-1">
-            <div className="w-full h-full cursor-pointer" onClick={onClick}>
+        <div className="relative w-full h-full p-1 group">
+            <div className="w-full h-full">
                 <Image
                     src={image || "/placeholder.jpg"}
                     alt={content}
@@ -51,6 +67,21 @@ export function ContentCard({ image, content, loading = false, onClick, index }:
                         backfaceVisibility: "hidden",
                     }}
                 />
+                <div className="absolute inset-5 flex items-center justify-center">
+                    <button
+                        className={cn(
+                            "w-full h-full rounded-full mix-blend-multiply",
+                            "transform scale-0 group-hover:scale-100",
+                            "transition-transform duration-300 ease-out",
+                            "flex items-center justify-center"
+                        )}
+                        style={{
+                            backgroundColor: randomColor,
+                            opacity: 1,
+                        }}
+                        onClick={onClick}
+                    ></button>
+                </div>
             </div>
             <div
                 className="absolute inset-1 pointer-events-none opacity-[0.5] mix-blend-overlay"
@@ -59,8 +90,26 @@ export function ContentCard({ image, content, loading = false, onClick, index }:
                     filter: "contrast(320%) brightness(100%)",
                 }}
             />
-            <div className="absolute bottom-0 left-0 p-2">
-                <h1 className="text-xs text-primary">{index}</h1>
+            <div
+                className={`absolute bottom-0 left-0 p-2
+                items-center leading-none flex flex-row gap-1
+                `}
+            >
+                <Circle className="text-primary fill-primary" size={scaledSize * 0.03} />
+                <h3
+                    className="text-primary font-bold"
+                    style={{ fontSize: `${scaledSize * 0.025}px` }}
+                >
+                    {index}
+                </h3>
+            </div>
+            <div className="absolute bottom-0 right-0 p-2 items-baseline leading-none w-[80%]">
+                <h3
+                    className="text-primary text-right font-bold"
+                    style={{ fontSize: `${scaledSize * 0.025}px` }}
+                >
+                    story: {name || "undefined"}
+                </h3>
             </div>
         </div>
     );
