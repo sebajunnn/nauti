@@ -24,17 +24,16 @@ const publicClient = createPublicClient({
 async function getChainContent(index: number): Promise<ContentData | null> {
     try {
         const chainData = await publicClient.readContract({
-            address: deployedContracts[31337].OnchainWebServer_v8.address as `0x${string}`,
-            functionName: "getPage",
-            abi: deployedContracts[31337].OnchainWebServer_v8.abi,
+            address: deployedContracts[31337].OnchainWebServerMetadata_v2.address as `0x${string}`,
+            functionName: "pages",
+            abi: deployedContracts[31337].OnchainWebServerMetadata_v2.abi,
             args: [BigInt(index)],
         });
-
         return {
-            content: chainData.content,
-            image: "https://i.pinimg.com/736x/ce/25/20/ce2520ca22bc5317176c18b437928525.jpg",
-            name: chainData.name,
-            description: chainData.description,
+            content: chainData[0],
+            name: chainData[1],
+            description: chainData[2],
+            image: !chainData[3] || chainData[3] === "" ? "https://i.pinimg.com/736x/ce/25/20/ce2520ca22bc5317176c18b437928525.jpg" : chainData[3],
         };
     } catch (error) {
         return null;
@@ -76,9 +75,9 @@ export async function getBatchContent(indices: number[]): Promise<Record<number,
         // Try blockchain first using multicall
         const chainDataPromises = indices.map((index) =>
             publicClient.readContract({
-                address: deployedContracts[31337].OnchainWebServer_v8.address as `0x${string}`,
-                functionName: "getPage",
-                abi: deployedContracts[31337].OnchainWebServer_v8.abi,
+                address: deployedContracts[31337].OnchainWebServerMetadata_v2.address as `0x${string}`,
+                functionName: "pages",
+                abi: deployedContracts[31337].OnchainWebServerMetadata_v2.abi,
                 args: [BigInt(index)],
             })
         );
@@ -92,10 +91,10 @@ export async function getBatchContent(indices: number[]): Promise<Record<number,
         results.forEach((result, idx) => {
             if (result.status === "fulfilled") {
                 contentMap[indices[idx]] = {
-                    content: result.value.content,
-                    image: "https://i.pinimg.com/736x/ce/25/20/ce2520ca22bc5317176c18b437928525.jpg",
-                    name: result.value.name,
-                    description: result.value.description,
+                    content: result.value[0],
+                    name: result.value[1],
+                    description: result.value[2],
+                    image: !result.value || result.value[3] === "" ? "https://i.pinimg.com/736x/ce/25/20/ce2520ca22bc5317176c18b437928525.jpg" : result.value[3]
                 };
             } else {
                 fallbackIndices.push(indices[idx]);
