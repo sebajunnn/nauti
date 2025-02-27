@@ -74,6 +74,7 @@ export async function getContent(index: number): Promise<ContentData> {
 // New batch content fetch function
 export async function getBatchContent(indices: number[]): Promise<Record<number, ContentData>> {
     try {
+        console.log("Fetching batch content", indices);
         // Try blockchain first using multicall
         const chainDataPromises = indices.map((index) =>
             publicClient.readContract({
@@ -85,6 +86,7 @@ export async function getBatchContent(indices: number[]): Promise<Record<number,
         );
 
         const results = await Promise.allSettled(chainDataPromises);
+        console.log("Chain data fetched");
         const contentMap: Record<number, ContentData> = {};
 
         // Process results and prepare API fallback array
