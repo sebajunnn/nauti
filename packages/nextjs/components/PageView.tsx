@@ -32,7 +32,6 @@ export default function PageView() {
 
     useEffect(() => {
         if (data) {
-            console.log(data[0]);
             setContent(data[0]);
             setName(data[1]);
             setDescription(data[2]);

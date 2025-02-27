@@ -53,13 +53,11 @@ const batchSize = 15; // Process immediately when queue reaches this size
 const maxBatchDelay = 16; // Only wait for one frame (60fps ≈ 16ms) max
 
 async function processBatchQueue() {
-    console.log("Processing batch queue", batchQueue);
     if (batchQueue.length === 0) return;
 
     const indices = [...batchQueue];
     batchQueue = [];
     if (batchTimeout) {
-        console.log("Clearing batch timeout");
         clearTimeout(batchTimeout);
         batchTimeout = null;
     }
@@ -93,7 +91,6 @@ export function useContentFetch(index: number) {
 
         // If data is in cache, use it immediately
         if (contentCache.has(index)) {
-            console.log("Content found in cache");
             setData(contentCache.get(index)!);
             setLoading(false);
             return;

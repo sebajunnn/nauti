@@ -1,6 +1,5 @@
 import Image from "next/image";
 import { Loader2 } from "lucide-react";
-import { Card, CardContent } from "../ui/card";
 
 interface ContentCardProps {
     image: string | null;
