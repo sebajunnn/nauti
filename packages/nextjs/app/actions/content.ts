@@ -42,9 +42,7 @@ async function getChainContent(index: number): Promise<ContentData | null> {
 }
 
 async function getApiContent(index: number): Promise<ContentData> {
-    const res = await fetch(
-        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/content?index=${index}`
-    );
+    const res = await fetch(`/api/content?index=${index}`);
     if (!res.ok) throw new Error("Failed to fetch content from API");
     return res.json();
 }
