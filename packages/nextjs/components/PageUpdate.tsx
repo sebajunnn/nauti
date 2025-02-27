@@ -158,7 +158,6 @@ export default function PageUpdate() {
 
             const data = await response.json();
             const ipfsUrl = `https://ipfs.io/ipfs/${data.IpfsHash}`;
-            console.log(ipfsUrl);
             setUploadedImageUrl(ipfsUrl);
         } catch (err) {
             console.error("Upload error:", err);
