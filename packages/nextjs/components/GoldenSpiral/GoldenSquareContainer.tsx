@@ -1,13 +1,9 @@
-import Image from "next/image";
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useSquareStore } from "@/stores/useSquareStore";
 import { goldenSpiralConstants, SpiralSquare, Vector } from "@/types/golden-spiral";
-import { cn } from "@/lib/utils";
-import { Textfit } from "react-textfit";
 import { HeroCard } from "@/components/content/HeroCard";
 import { ContentCard } from "@/components/content/ContentCard";
 import { useContentFetch } from "@/hooks/useContentFetch";
-import { ContentModal } from "@/components/content/ContentModal";
 
 interface GoldenSquareContainerProps {
     square: SpiralSquare;
@@ -25,12 +21,6 @@ interface ModalData {
     name?: string;
     description?: string;
 }
-
-const LOW_QUALITY = 25;
-const HIGH_QUALITY = 75;
-const FIXED_IMAGE_SIZE = 400;
-const FIXED_QUALITY = 100;
-const NOISE_SVG = `url("data:image/svg+xml,%3Csvg viewBox='0 0 2048 2048' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.35' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`;
 
 // Custom debounce hook
 function useDebounce<T extends (...args: any[]) => void>(callback: T, delay: number) {
@@ -144,10 +134,11 @@ export function GoldenSquareContainer({
             }}
         >
             {startingSquareIndex === (squareIndex ?? 0) && zoomDepth === 0 ? (
-                <HeroCard fontSize={fontSize} />
+                <HeroCard fontSize={fontSize} scale={scale} />
             ) : (
                 <ContentCard
                     image={data?.image || null}
+                    name={data?.name || ""}
                     content={data?.content || ""}
                     loading={loading}
                     onClick={() =>
@@ -159,6 +150,7 @@ export function GoldenSquareContainer({
                         })
                     }
                     index={squareActualIndex}
+                    scaledSize={scaledSize}
                 />
             )}
         </div>

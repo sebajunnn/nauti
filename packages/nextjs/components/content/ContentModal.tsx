@@ -24,23 +24,48 @@ interface ContentModalProps {
     description?: string;
 }
 
+const defaultContent = `
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                background-color: #d9d9d9;
+                font-family: system-ui, -apple-system, sans-serif;
+            }
+            h1 {
+                color: #666;
+                font-weight: 400;
+            }
+        </style>
+        <h4>No content minted</h4>
+    `;
+
 export function ContentModal({
     open,
     onOpenChange,
     pageId = 0,
-    content = "<h1>Hello, Web3!</h1>",
+    content,
     name = "",
     description = "",
 }: ContentModalProps) {
     const [isFullscreen, setIsFullscreen] = useState(false);
 
-    console.log("content", content);
+    useEffect(() => {
+        if (!open) {
+            setIsFullscreen(false);
+        }
+    }, [open]);
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogOverlay className={cn("bg-black/20 backdrop-brightness-125")} />
             <DialogContent
                 className={cn(
-                    "max-w-4xl h-[90vh] flex flex-col",
+                    "max-w-4xl h-[calc(100vh-3rem)] flex flex-col",
                     "p-0 gap-0 font-redaction [&>button]:hidden",
                     "border-0 bg-foreground text-background",
                     "!rounded-3xl overflow-hidden",
@@ -97,7 +122,9 @@ export function ContentModal({
                         <Button
                             variant="destructive"
                             className={cn("rounded-full aspect-square h-5", "p-1 min-w-0")}
-                            onClick={() => onOpenChange(false)}
+                            onClick={() => {
+                                onOpenChange(false);
+                            }}
                         >
                             <X className="h-3 w-3" />
                         </Button>
@@ -113,7 +140,7 @@ export function ContentModal({
                                     * { -ms-overflow-style: none; scrollbar-width: none; }
                                     html, body { margin: 0; padding: 0; }
                                 </style>
-                                ${content}
+                                ${content?.trim() || defaultContent}
                             `}
                             className="w-full h-full border-0 [&::-webkit-scrollbar]:hidden"
                             title="preview"
