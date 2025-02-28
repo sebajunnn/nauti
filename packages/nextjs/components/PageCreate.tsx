@@ -21,12 +21,13 @@ import { javascript } from "@codemirror/lang-javascript";
 import { oneDark } from "@codemirror/theme-one-dark";
 import CodeMirror from "@uiw/react-codemirror";
 import { parseEther } from "viem";
-import { useWriteContract } from "wagmi";
+import { useWriteContract, useChainId } from "wagmi";
 import { useDropzone } from "react-dropzone";
 import { notification } from "@/utils/scaffold-eth";
 import Image from "next/image";
 
 export default function PageCreate() {
+    const chainId = useChainId();
     const [content, setContent] = useState("<h1>Hello, Web3!</h1>");
     const [editedGLB, setEditedGLB] = useState(false);
     const [editedReact, setEditedReact] = useState(false);
@@ -44,6 +45,7 @@ export default function PageCreate() {
     const { writeContract } = useWriteContract();
 
     const createPage = async () => {
+        if (!chainId) return;
         if (!content.trim()) {
             setError("Please enter some content");
             return;
@@ -59,8 +61,11 @@ export default function PageCreate() {
 
         try {
             await writeContract({
-                address: deployedContracts[targetNetwork.id].OnchainWebServer_v8.address,
-                abi: deployedContracts[targetNetwork.id].OnchainWebServer_v8.abi,
+                address:
+                    deployedContracts[chainId as keyof typeof deployedContracts].OnchainWebServer_v8
+                        .address,
+                abi: deployedContracts[chainId as keyof typeof deployedContracts]
+                    .OnchainWebServer_v8.abi,
                 functionName: "mintPage",
                 args: [
                     language === "jsx" || language === "tsx" ? compiledCode : content,
