@@ -3,7 +3,7 @@
 import { createPublicClient, http } from "viem";
 import { hardhat } from "viem/chains";
 import deployedContracts from "@/contracts/deployedContracts";
-import { conduit } from "@/scaffold.config";
+import scaffoldConfig, { conduit } from "@/scaffold.config";
 
 interface ContentData {
     content: string;
@@ -47,12 +47,14 @@ const decodeBase64TokenURI = (tokenURI: string): ContentData => {
 
 async function getChainContent(index: number): Promise<ContentData | null> {
     try {
+        const targetNetwork = scaffoldConfig.targetNetworks[0];
         const chainData = await publicClient.readContract({
-            address: deployedContracts[targetNetwork.id].OnchainWebServer_v8.address as `0x${string}`,
+            address: deployedContracts[31337].OnchainWebServer_v8.address as `0x${string}`,
             functionName: "tokenURI",
-            abi: deployedContracts[targetNetwork.id].OnchainWebServer_v8.abi,
+            abi: deployedContracts[31337].OnchainWebServer_v8.abi,
             args: [BigInt(index)],
         });
+
         const metadata = decodeBase64TokenURI(chainData);
 
         return {
@@ -78,8 +80,7 @@ async function getApiContent(index: number): Promise<ContentData> {
     } catch (error) {
         console.error(`Failed to fetch content for index ${index}:`, error);
         throw new Error(
-            `Failed to fetch content for index ${index}: ${
-                error instanceof Error ? error.message : "Unknown error"
+            `Failed to fetch content for index ${index}: ${error instanceof Error ? error.message : "Unknown error"
             }`
         );
     }
@@ -99,12 +100,13 @@ export async function getContent(index: number): Promise<ContentData> {
 // New batch content fetch function
 export async function getBatchContent(indices: number[]): Promise<Record<number, ContentData>> {
     try {
+        const targetNetwork = scaffoldConfig.targetNetworks[0];
         // Try blockchain first using multicall
         const chainDataPromises = indices.map((index) =>
             publicClient.readContract({
-                address: deployedContracts[targetNetwork.id].OnchainWebServer_v8.address as `0x${string}`,
+                address: deployedContracts[31337].OnchainWebServer_v8.address as `0x${string}`,
                 functionName: "tokenURI",
-                abi: deployedContracts[targetNetwork.id].OnchainWebServer_v8.abi,
+                abi: deployedContracts[31337].OnchainWebServer_v8.abi,
                 args: [BigInt(index)],
             })
         );
@@ -116,6 +118,7 @@ export async function getBatchContent(indices: number[]): Promise<Record<number,
         const fallbackIndices: number[] = [];
 
         results.forEach((result, idx) => {
+            if (idx === 0) console.log(result)
             if (result.status === "fulfilled") {
                 const metadata = decodeBase64TokenURI(result.value);
                 contentMap[indices[idx]] = {
@@ -153,6 +156,7 @@ export async function getBatchContent(indices: number[]): Promise<Record<number,
 
 export async function getTotalSupply(): Promise<number> {
     try {
+        const targetNetwork = scaffoldConfig.targetNetworks[0];
         const totalSupply = await publicClient.readContract({
             address: deployedContracts[31337].OnchainWebServer_v8.address as `0x${string}`,
             functionName: "totalSupply",

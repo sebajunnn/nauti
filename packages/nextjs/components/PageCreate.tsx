@@ -25,6 +25,12 @@ import { useWriteContract } from "wagmi";
 import { useDropzone } from "react-dropzone";
 import { notification } from "@/utils/scaffold-eth";
 import Image from "next/image";
+import { useTargetNetwork } from "@/hooks/useTargetNetwork";
+
+interface UploadResponse {
+    IpfsHash: string;
+    ipfsUrl: string;
+}
 
 export default function PageCreate() {
     const [content, setContent] = useState("<h1>Hello, Web3!</h1>");
@@ -40,6 +46,9 @@ export default function PageCreate() {
     const [isUploading, setIsUploading] = useState(false);
     const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
     const [isImageUploading, setIsImageUploading] = useState(false);
+    const [isHtmlUploading, setIsHtmlUploading] = useState(false);
+    const [uploadedHtmlUrl, setUploadedHtmlUrl] = useState<string | null>(null);
+    const { targetNetwork } = useTargetNetwork();
 
     const { writeContract } = useWriteContract();
 
@@ -63,13 +72,14 @@ export default function PageCreate() {
                 abi: deployedContracts[targetNetwork.id].OnchainWebServer_v8.abi,
                 functionName: "mintPage",
                 args: [
-                    language === "jsx" || language === "tsx" ? compiledCode : content,
+                    uploadedHtmlUrl,
                     name,
                     description,
                     uploadedImageUrl,
                 ],
                 value: parseEther("0.01"),
             });
+            setUploadedHtmlUrl(null);
             setError(null);
         } catch (error) {
             console.error("Error creating page:", error);
@@ -247,6 +257,86 @@ export default function PageCreate() {
         maxFiles: 1,
     });
 
+    // HTML file upload handler
+    const onHtmlDrop = useCallback(async (acceptedFiles: File[]) => {
+        if (acceptedFiles.length === 0) return;
+
+        const file = acceptedFiles[0];
+        if (!file.name.endsWith('.html')) {
+            notification.error("Please upload an HTML file");
+            return;
+        }
+
+        setIsHtmlUploading(true);
+        try {
+            // First read the file content
+            const content = await file.text();
+            setContent(content);
+
+            // Then upload to IPFS
+            const formData = new FormData();
+            formData.append("file", file);
+
+            const response = await fetch("/api/upload", {
+                method: "POST",
+                body: formData,
+            });
+
+            if (!response.ok) {
+                throw new Error("Upload failed");
+            }
+
+            const data: UploadResponse = await response.json();
+            setUploadedHtmlUrl(`https://ipfs.io/ipfs/${data.IpfsHash}`);
+            console.log("Uploaded HTML URL:", `https://ipfs.io/ipfs/${data.IpfsHash}`);
+            notification.success("HTML file uploaded successfully!");
+        } catch (error) {
+            console.error("Upload error:", error);
+            notification.error("Failed to upload HTML file");
+        } finally {
+            setIsHtmlUploading(false);
+        }
+    }, []);
+
+    const { getRootProps: getHtmlRootProps, getInputProps: getHtmlInputProps } = useDropzone({
+        onDrop: onHtmlDrop,
+        accept: {
+            'text/html': ['.html']
+        },
+        maxFiles: 1,
+    });
+
+    const uploadHtml = async () => {
+        setIsHtmlUploading(true);
+        try {
+            // Create a new Blob from the editor content
+            const htmlBlob = new Blob([content], { type: 'text/html' });
+            // Create a File object from the Blob
+            const file = new File([htmlBlob], 'page.html', { type: 'text/html' });
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            const response = await fetch("/api/upload", {
+                method: "POST",
+                body: formData,
+            });
+
+            if (!response.ok) {
+                throw new Error("Upload failed");
+            }
+
+            const data: UploadResponse = await response.json();
+            setUploadedHtmlUrl(`https://ipfs.io/ipfs/${data.IpfsHash}`);
+            notification.success("HTML file uploaded successfully!");
+        } catch (error) {
+            console.error("Upload error:", error);
+            notification.error("Failed to upload HTML file");
+        } finally {
+            setIsHtmlUploading(false);
+        }
+    }
+
     return (
         <div className="w-full h-screen p-2 mx-auto space-y-0 space-x-0 flex flex-row gap-2 overflow-hidden">
             <div className="flex-1 flex flex-col overflow-hidden bg-background rounded-4xl p-0">
@@ -256,7 +346,17 @@ export default function PageCreate() {
                         <div className="bg-muted px-4 py-2 rounded-lg text-sm font-medium">
                             Cost: 0.01 ETH
                         </div>
-                        <Button onClick={createPage} disabled={isLoading} className="min-w-[160px]">
+                        <Button onClick={uploadHtml} disabled={isLoading} className="min-w-[160px]">
+                            {isLoading ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Uploading...
+                                </>
+                            ) : (
+                                "Deploy HTML to IPFS"
+                            )}
+                        </Button>
+                        <Button onClick={createPage} disabled={isLoading || !uploadedHtmlUrl || !uploadedImageUrl || !description || !name} className="min-w-[160px]">
                             {isLoading ? (
                                 <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -305,15 +405,85 @@ export default function PageCreate() {
                                 className="min-h-[100px]"
                             />
 
+                            {/* Html Upload Section */}
+                            <Card>
+                                <CardHeader>
+                                    <div className="flex items-center justify-between">
+                                        <CardTitle>
+                                            {uploadedHtmlUrl ? (
+                                                <div className="flex items-center gap-2">
+                                                    <span>Uploaded HTML</span>
+                                                    <a
+                                                        href={uploadedHtmlUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-sm text-primary hover:underline flex items-center gap-1"
+                                                    >
+                                                        <span className="text-xs opacity-70">
+                                                            (View on IPFS)
+                                                        </span>
+                                                        <svg
+                                                            xmlns="http://www.w3.org/2000/svg"
+                                                            width="16"
+                                                            height="16"
+                                                            viewBox="0 0 24 24"
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                            strokeWidth="2"
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            className="h-4 w-4"
+                                                        >
+                                                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                                                            <polyline points="15 3 21 3 21 9" />
+                                                            <line x1="10" y1="14" x2="21" y2="3" />
+                                                        </svg>
+                                                    </a>
+                                                </div>
+                                            ) : (
+                                                "Upload HTML File"
+                                            )}
+                                        </CardTitle>
+                                    </div>
+                                </CardHeader>
+                                <CardContent>
+                                    <div
+                                        {...getHtmlRootProps()}
+                                        className="border-2 border-dashed border-primary/50 rounded-lg p-8 text-center cursor-pointer hover:border-primary transition-colors"
+                                    >
+                                        <input {...getHtmlInputProps()} />
+                                        <div className="flex flex-col items-center gap-2">
+                                            {isHtmlUploading ? (
+                                                <Loader2 className="h-8 w-8 animate-spin" />
+                                            ) : (
+                                                <>
+                                                    <Upload className="h-8 w-8" />
+                                                    <p>
+                                                        {uploadedHtmlUrl
+                                                            ? "Drop a new HTML file to replace the current one"
+                                                            : "Drag & drop an HTML file here, or click to select"
+                                                        }
+                                                    </p>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                    {uploadedHtmlUrl && (
+                                        <div className="mt-4 text-sm text-success">
+                                            File uploaded successfully! The content has been loaded into the editor below.
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+
                             {/* Image Upload Section */}
                             <div
                                 {...getImageRootProps()}
                                 className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
-                                ${
-                                    isImageDragActive
+                                ${isImageDragActive
                                         ? "border-primary bg-primary/10"
                                         : "border-muted-foreground/25"
-                                }
+                                    }
                                 ${isImageUploading ? "opacity-50 pointer-events-none" : ""}`}
                             >
                                 <input {...getImageInputProps()} />

@@ -11,6 +11,8 @@ const deployOnchainWebServer: DeployFunction = async function (hre: HardhatRunti
     log: true,
   });
 
+  console.log("metadataContract", metadataContract.address);
+
   await deploy("OnchainWebServer_v8", {
     from: deployer,
     log: true,
