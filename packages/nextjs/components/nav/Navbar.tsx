@@ -1,6 +1,9 @@
+"use client";
+
 import { SpiralSquare } from "@/types/golden-spiral";
 import { Shell, Settings } from "lucide-react";
 import { useSpiralStore } from "@/stores/useSpiralStore";
+import { useSquareStore } from "@/stores/useSquareStore";
 import { useState } from "react";
 import { SearchInput } from "./SearchInput";
 import { IndexState } from "./IndexState";
@@ -14,15 +17,14 @@ import {
 } from "@/components/ui/accordion";
 import { cn } from "@/lib/utils";
 
-export function Navbar({
-    squares,
-    handleReset,
-}: {
-    squares: SpiralSquare[];
-    handleReset: () => void;
-}) {
-    const { zoomDepth } = useSpiralStore();
+export function Navbar() {
+    const { zoomDepth, setResetTargetScale } = useSpiralStore();
+    const { squares } = useSquareStore();
     const [showIndex, setShowIndex] = useState(false);
+
+    const handleReset = () => {
+        setResetTargetScale(true);
+    };
 
     // bg-[hsl(222,88%,10%)]
     return (
@@ -100,6 +102,17 @@ export function Navbar({
                             >
                                 <div className="flex flex-row gap-2">
                                     <Link
+                                        href="/buildpage"
+                                        className={cn(
+                                            "bg-primary text-primary-foreground px-2 rounded-full",
+                                            "hover:bg-chart-3 hover:text-background",
+                                            "transition-colors duration-200 ease-in-out",
+                                            "text-sm font-medium"
+                                        )}
+                                    >
+                                        Publish
+                                    </Link>
+                                    <Link
                                         href="/updatepage"
                                         className={cn(
                                             "bg-primary text-primary-foreground px-2 rounded-full",
@@ -110,7 +123,7 @@ export function Navbar({
                                     >
                                         Update
                                     </Link>
-                                    <Link
+                                    {/* <Link
                                         href="/about"
                                         className={cn(
                                             "bg-primary text-primary-foreground px-2 rounded-full",
@@ -120,7 +133,7 @@ export function Navbar({
                                         )}
                                     >
                                         About
-                                    </Link>
+                                    </Link> */}
                                 </div>
                                 <button
                                     onClick={() => setShowIndex(!showIndex)}
