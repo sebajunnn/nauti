@@ -275,7 +275,7 @@ export default function PageCreate() {
                             className="text-primary"
                         />
                         <CardTitle className="text-3xl font-bold tracking-tighter font-rubik">
-                            Publish your Web3 Page
+                            Publish Your Nauti Page
                         </CardTitle>
                     </div>
 

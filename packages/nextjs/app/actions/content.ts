@@ -23,26 +23,47 @@ const publicClient = createPublicClient({
 });
 
 const decodeBase64TokenURI = (tokenURI: string): ContentData => {
-    // Remove the "data:application/json;base64," prefix
-    const base64Json = tokenURI.replace("data:application/json;base64,", "");
+    try {
+        // Remove the "data:application/json;base64," prefix
+        const base64Json = tokenURI.replace("data:application/json;base64,", "");
 
-    // Decode base64 to get the JSON string
-    const jsonString = Buffer.from(base64Json, "base64").toString();
+        // Decode base64 to get the JSON string
+        const jsonString = Buffer.from(base64Json, "base64").toString();
 
-    // Parse the JSON
-    const metadata = JSON.parse(jsonString);
+        // Sanitize the JSON string by properly escaping line breaks and other control characters
+        const sanitizedJson = jsonString
+            .replace(/\n/g, "\\n") // Replace newlines with \n
+            .replace(/\r/g, "\\r") // Replace carriage returns with \r
+            .replace(/\t/g, "\\t") // Replace tabs with \t
+            .replace(/[\u0000-\u001F]+/g, (match) =>
+                Array.from(match)
+                    .map((char) => `\\u${char.charCodeAt(0).toString(16).padStart(4, "0")}`)
+                    .join("")
+            );
 
-    // Extract the HTML content from animation_url
-    // animation_url is in format "data:text/html;base64,<base64-content>"
-    const htmlBase64 = metadata.animation_url.replace("data:text/html;base64,", "");
-    const content = Buffer.from(htmlBase64, "base64").toString();
+        // Parse the sanitized JSON
+        const metadata = JSON.parse(sanitizedJson);
 
-    return {
-        content,
-        image: metadata.image || null,
-        name: metadata.name,
-        description: metadata.description,
-    };
+        // Extract the HTML content from animation_url
+        const htmlBase64 = metadata.animation_url.replace("data:text/html;base64,", "");
+        const content = Buffer.from(htmlBase64, "base64").toString();
+
+        return {
+            content,
+            image: metadata.image || null,
+            name: metadata.name,
+            description: metadata.description,
+        };
+    } catch (error) {
+        console.error("Error decoding token URI:", error);
+        // Return a fallback object
+        return {
+            content: "<h1>Error: Could not load content</h1>",
+            image: null,
+            name: "Error",
+            description: "Failed to load content",
+        };
+    }
 };
 
 async function getChainContent(index: number): Promise<ContentData | null> {

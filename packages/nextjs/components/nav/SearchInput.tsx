@@ -1,13 +1,16 @@
 import { cn } from "@/lib/utils";
 import { useSpiralStore } from "@/stores/useSpiralStore";
+import { useSquareStore } from "@/stores/useSquareStore";
 import { Search } from "lucide-react";
 
 export function SearchInput({ className }: { className?: string }) {
     const { setZoomDepth } = useSpiralStore();
+    const { totalSupply } = useSquareStore();
 
     const handleSearch = (value: number) => {
         if (!isNaN(value) && value >= 0) {
             setZoomDepth(0); // Reset zoom first
+            value = totalSupply - value;
             useSpiralStore.getState().zoomToSquare(value);
         }
     };
