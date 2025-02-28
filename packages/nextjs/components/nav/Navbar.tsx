@@ -8,7 +8,7 @@ import { SearchInput } from "./SearchInput";
 import { IndexState } from "./IndexState";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { RainbowKitCustomConnectButton } from "@/components/RainbowKitCustomConnectButton";
 
 import {
@@ -21,9 +21,15 @@ import { cn } from "@/lib/utils";
 
 export function Navbar() {
     const router = useRouter();
+    const pathname = usePathname();
     const { zoomDepth, setResetTargetScale } = useSpiralStore();
     const { squares } = useSquareStore();
     const [showIndex, setShowIndex] = useState(false);
+
+    // Return null if we're on the 404 page
+    if (pathname === "/404") {
+        return null;
+    }
 
     const handleReset = () => {
         setResetTargetScale(true);
