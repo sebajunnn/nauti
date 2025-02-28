@@ -1,13 +1,17 @@
 import { ethers } from "hardhat";
+import { OnchainWebServer_v8 } from "../typechain-types";
 
 async function main() {
     const [deployer] = await ethers.getSigners();
     console.log("Withdrawing with account:", deployer.address);
 
-    const nftContract = await ethers.getContract("OnchainWebServer_v8");
+    const nftContract = await ethers.getContract<OnchainWebServer_v8>(
+        "OnchainWebServer_v8",
+        deployer
+    );
 
     // Get current balance
-    const balance = await nftContract.getBalance();
+    const balance = await ethers.provider.getBalance(await nftContract.getAddress());
     console.log("Contract balance:", ethers.formatEther(balance), "ETH");
 
     if (balance === 0n) {
@@ -29,4 +33,4 @@ main()
     .catch((error) => {
         console.error(error);
         process.exit(1);
-    }); 
+    });
