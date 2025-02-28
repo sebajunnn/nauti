@@ -23,24 +23,18 @@ const App = ({ children }: { children: React.ReactNode }) => {
     );
 };
 
+export const queryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            refetchOnWindowFocus: false,
+        },
+    },
+});
+
 export const Providers = ({ children }: { children: React.ReactNode }) => {
     const { resolvedTheme } = useTheme();
     const isDarkMode = resolvedTheme === "dark";
     const [mounted, setMounted] = useState(false);
-    const [queryClient] = useState(
-        () =>
-            new QueryClient({
-                defaultOptions: {
-                    queries: {
-                        refetchOnWindowFocus: false,
-                        // Disable automatic retries for SSR
-                        retry: false,
-                        // Disable data prefetching for SSR
-                        staleTime: Infinity,
-                    },
-                },
-            })
-    );
 
     useEffect(() => {
         setMounted(true);
