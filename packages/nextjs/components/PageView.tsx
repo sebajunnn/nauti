@@ -19,9 +19,9 @@ export default function PageView() {
     const { targetNetwork } = useTargetNetwork();
 
     const { isFetching, refetch, error, data } = useReadContract({
-        address: deployedContracts[31337].OnchainWebServerMetadata_v2.address,
+        address: deployedContracts[targetNetwork.id].OnchainWebServerMetadata_v2.address,
         functionName: "pages",
-        abi: deployedContracts[31337].OnchainWebServerMetadata_v2.abi,
+        abi: deployedContracts[targetNetwork.id].OnchainWebServerMetadata_v2.abi,
         args: [BigInt(pageId)],
         chainId: targetNetwork.id,
         query: {

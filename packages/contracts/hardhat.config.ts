@@ -1,5 +1,6 @@
 import * as dotenv from "dotenv";
-dotenv.config();
+import { resolve } from "path";
+dotenv.config({ path: resolve(__dirname, ".env.local") });
 import { HardhatUserConfig, task } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import "hardhat-deploy";
@@ -9,7 +10,10 @@ import generateTsAbis from "./scripts/generateTsAbis";
 // If not set, it uses the hardhat account 0 private key.
 // You can generate a random account with `yarn generate` or `yarn account:import` to import your existing PK
 const deployerPrivateKey =
-  process.env.__RUNTIME_DEPLOYER_PRIVATE_KEY ?? "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+  process.env.__RUNTIME_DEPLOYER_PRIVATE_KEY ?? (() => {
+    console.warn("Warning: Using default deployer key - no __RUNTIME_DEPLOYER_PRIVATE_KEY found in .env");
+    return "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+  })();
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -37,6 +41,19 @@ const config: HardhatUserConfig = {
       allowUnlimitedContractSize: true,
       gas: 800_000_000,
       blockGasLimit: 1_000_000_000,
+    },
+    conduit: {
+      url: `https://rpc-mammothon-g2-testnet-4a2w8v0xqy.t.conduit.xyz/${process.env.CONDUIT_API_KEY}`,
+      accounts: [deployerPrivateKey],
+      verify: {
+        etherscan: {
+          apiUrl: "https://explorer-mammothon-g2-testnet-4a2w8v0xqy.t.conduit.xyz",
+          apiKey: process.env.CONDUIT_API_KEY ?? (() => {
+            console.warn("Warning: No CONDUIT_API_KEY found in .env");
+            return "";
+          })(),
+        },
+      },
     },
   },
 };

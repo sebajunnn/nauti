@@ -5,7 +5,8 @@
         "compile": "hardhat compile",
         "test": "hardhat test",
         "chain": "hardhat node --network hardhat",
-        "deploy": "ts-node scripts/runHardhatDeployWithPK.ts"
+        "deploy": "ts-node scripts/runHardhatDeployWithPK.ts",
+        "account:import": "hardhat run scripts/importAccount.ts"
     },
     "devDependencies": {
         "@nomicfoundation/hardhat-ethers": "^3.0.8",
@@ -25,6 +26,7 @@
         "@inquirer/password": "^4.0.2",
         "@openzeppelin/contracts": "^5.2.0",
         "@openzeppelin/contracts-upgradeable": "^5.2.0",
-        "dotenv": "~16.4.7"
+        "dotenv": "~16.4.7",
+        "envfile": "7.1.0"
     }
 }

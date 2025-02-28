@@ -35,9 +35,9 @@ export default function PageUpdate() {
 
     const { writeContract } = useWriteContract();
     const { refetch } = useReadContract({
-        address: deployedContracts[31337].OnchainWebServerMetadata_v2.address,
+        address: deployedContracts[targetNetwork.id].OnchainWebServerMetadata_v2.address,
         functionName: "pages",
-        abi: deployedContracts[31337].OnchainWebServerMetadata_v2.abi,
+        abi: deployedContracts[targetNetwork.id].OnchainWebServerMetadata_v2.abi,
         args: [BigInt(pageId)],
         chainId: targetNetwork.id,
         query: {
@@ -57,8 +57,8 @@ export default function PageUpdate() {
 
         try {
             await writeContract({
-                address: deployedContracts[31337].OnchainWebServerMetadata_v2.address,
-                abi: deployedContracts[31337].OnchainWebServerMetadata_v2.abi,
+                address: deployedContracts[targetNetwork.id].OnchainWebServerMetadata_v2.address,
+                abi: deployedContracts[targetNetwork.id].OnchainWebServerMetadata_v2.abi,
                 functionName: "updatePage",
                 args: [BigInt(pageId), (language === "jsx" || language === "tsx") ? compiledCode : content, name, description, uploadedImageUrl],
             });
@@ -171,6 +171,7 @@ export default function PageUpdate() {
         onDrop: onImageDrop,
         accept: {
             'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp'],
+            'video/*': ['.webm'],
         },
         maxFiles: 1,
     });

@@ -32,7 +32,7 @@ contract OnchainWebServer_v8 is ERC721, Ownable {
 
     constructor(
         address _metadataContract
-    ) ERC721("Web3 Pages", "W3P") Ownable(msg.sender) {
+    ) ERC721("Nauti", "N/A") Ownable(msg.sender) {
         metadataContract = _metadataContract;
     }
 

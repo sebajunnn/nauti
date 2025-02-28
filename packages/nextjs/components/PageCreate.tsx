@@ -53,8 +53,8 @@ export default function PageCreate() {
 
         try {
             await writeContract({
-                address: deployedContracts[31337].OnchainWebServer_v8.address,
-                abi: deployedContracts[31337].OnchainWebServer_v8.abi,
+                address: deployedContracts[targetNetwork.id].OnchainWebServer_v8.address,
+                abi: deployedContracts[targetNetwork.id].OnchainWebServer_v8.abi,
                 functionName: "mintPage",
                 args: [
                     (language === "jsx" || language === "tsx") ? compiledCode : content,

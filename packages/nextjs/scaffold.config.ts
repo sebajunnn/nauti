@@ -1,4 +1,6 @@
 import * as chains from "viem/chains";
+import { defineChain } from 'viem';
+import { hardhat } from "viem/chains";
 
 export type ScaffoldConfig = {
   targetNetworks: readonly chains.Chain[];
@@ -10,9 +12,29 @@ export type ScaffoldConfig = {
 
 export const DEFAULT_ALCHEMY_API_KEY = "oKxs-03sij-U_N0iOlrSsZFr29-IqbuF";
 
+
+export const conduit = defineChain({
+  id: 55550, // Your custom chain ID
+  name: 'mammothon-g2-testnet-4a2w8v0xqy',
+  nativeCurrency: {
+    name: 'ETH',
+    symbol: 'ETH',
+    decimals: 18,
+  },
+  rpcUrls: {
+    default: { http: ['https://rpc-mammothon-g2-testnet-4a2w8v0xqy.t.conduit.xyz'] },
+    public: { http: ['https://rpc-mammothon-g2-testnet-4a2w8v0xqy.t.conduit.xyz'] },
+  },
+  blockExplorers: {
+    default: { name: 'Blockscout', url: 'https://explorer-mammothon-g2-testnet-4a2w8v0xqy.t.conduit.xyz' },
+  },
+  testnet: true, // Set to true if it's a testnet
+});
+
+
 const scaffoldConfig = {
   // The networks on which your DApp is live
-  targetNetworks: [chains.hardhat],
+  targetNetworks: [hardhat], // TODO: change to conduit
 
   // The interval at which your front-end polls the RPC servers for new data
   // it has no effect if you only target the local network (default is 4000)
