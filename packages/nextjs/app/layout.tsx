@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { Providers } from "@/components/Providers";
 import "@rainbow-me/rainbowkit/styles.css";
 import { Navbar } from "@/components/nav/Navbar";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const rubik = localFont({
     src: [
@@ -155,6 +156,7 @@ export default function RootLayout({
             className={`${redaction.variable} ${sprat.variable} ${rubik.variable} antialiased font-rubik`}
         >
             <body>
+                <SpeedInsights />
                 <ThemeProvider
                     attribute="class"
                     defaultTheme="light"

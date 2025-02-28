@@ -28,6 +28,7 @@
         "@uiw/react-codemirror": "^4.23.8",
         "@uniswap/sdk-core": "^7.6.0",
         "@uniswap/v2-sdk": "^4.14.0",
+        "@vercel/speed-insights": "^1.2.0",
         "@wagmi/core": "^2.16.4",
         "abitype": "^1.0.8",
         "blo": "^1.2.0",
