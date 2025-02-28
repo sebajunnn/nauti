@@ -98,4 +98,23 @@ contract OnchainWebServer_v8 is ERC721, Ownable {
     function totalSupply() public view returns (uint256) {
         return _tokenIds;
     }
+
+    /**
+     * @notice Allows the contract owner to withdraw collected ETH
+     */
+    function withdraw() external onlyOwner {
+        uint256 balance = address(this).balance;
+        require(balance > 0, "No ETH to withdraw");
+
+        (bool success, ) = msg.sender.call{value: balance}("");
+        require(success, "Withdrawal failed");
+    }
+
+    /**
+     * @notice Returns the current balance of the contract
+     * @return uint256 The balance in wei
+     */
+    function getBalance() external view returns (uint256) {
+        return address(this).balance;
+    }
 }

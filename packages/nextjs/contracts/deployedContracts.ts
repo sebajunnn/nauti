@@ -334,7 +334,7 @@ const deployedContracts = {
       },
     },
     OnchainWebServer_v8: {
-      address: "0x40D513dFbFdE7D821A3bD644f1E487683a1949Ff",
+      address: "0x3956691a8E9108b38df7B84a7D58FC315cf00fBF",
       abi: [
         {
           inputs: [
@@ -955,6 +955,13 @@ const deployedContracts = {
             },
           ],
           name: "transferOwnership",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "withdraw",
           outputs: [],
           stateMutability: "nonpayable",
           type: "function",

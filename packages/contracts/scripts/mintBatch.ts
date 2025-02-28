@@ -26,11 +26,11 @@ async function main() {
     console.log(`Found ${htmlFiles.length} HTML files to mint`);
 
     // Mint each NFT
-    for (let i = 0; i < htmlFiles.length; i++) {
-        const htmlContent = fs.readFileSync(path.join(htmlsDir, htmlFiles[i]), 'utf8');
+    for (let i = 0; i < 36; i++) {
+        const htmlContent = fs.readFileSync(path.join(htmlsDir, htmlFiles[i % 11]), 'utf8');
 
         // Get corresponding IPFS URL
-        const ipfsData = ipfsHashes.find((item: any) => item.index === i);
+        const ipfsData = ipfsHashes.find((item: any) => item.index === i + 13);
         if (!ipfsData) {
             console.error(`No IPFS data found for index ${i}, skipping...`);
             continue;
