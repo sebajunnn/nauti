@@ -4,7 +4,13 @@ import { useCallback, useEffect, useState } from "react";
 import deployedContracts from "../contracts/deployedContracts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ImageIcon, Loader2 } from "lucide-react";
@@ -35,9 +41,12 @@ export default function PageUpdate() {
 
     const { writeContract } = useWriteContract();
     const { refetch } = useReadContract({
-        address: deployedContracts[targetNetwork.id].OnchainWebServerMetadata_v2.address,
+        address:
+            deployedContracts[targetNetwork.id as keyof typeof deployedContracts]
+                .OnchainWebServerMetadata_v2.address,
         functionName: "pages",
-        abi: deployedContracts[targetNetwork.id].OnchainWebServerMetadata_v2.abi,
+        abi: deployedContracts[targetNetwork.id as keyof typeof deployedContracts]
+            .OnchainWebServerMetadata_v2.abi,
         args: [BigInt(pageId)],
         chainId: targetNetwork.id,
         query: {
@@ -57,10 +66,19 @@ export default function PageUpdate() {
 
         try {
             await writeContract({
-                address: deployedContracts[targetNetwork.id].OnchainWebServerMetadata_v2.address,
-                abi: deployedContracts[targetNetwork.id].OnchainWebServerMetadata_v2.abi,
+                address:
+                    deployedContracts[targetNetwork.id as keyof typeof deployedContracts]
+                        .OnchainWebServerMetadata_v2.address,
+                abi: deployedContracts[targetNetwork.id as keyof typeof deployedContracts]
+                    .OnchainWebServerMetadata_v2.abi,
                 functionName: "updatePage",
-                args: [BigInt(pageId), (language === "jsx" || language === "tsx") ? compiledCode : content, name, description, uploadedImageUrl],
+                args: [
+                    BigInt(pageId),
+                    language === "jsx" || language === "tsx" ? compiledCode : content,
+                    name,
+                    description,
+                    uploadedImageUrl || "",
+                ],
             });
             setError(null);
         } catch (error) {
@@ -91,7 +109,8 @@ export default function PageUpdate() {
 
     const getEditorExtension = () => {
         if (language === "html" || language === "glb") return html();
-        if (language === "jsx" || language === "tsx") return javascript({ jsx: true, typescript: language === "tsx" });
+        if (language === "jsx" || language === "tsx")
+            return javascript({ jsx: true, typescript: language === "tsx" });
         return html();
     };
 
@@ -106,7 +125,7 @@ export default function PageUpdate() {
           }
           ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
           `,
-                    { presets: ["react", "env"] },
+                    { presets: ["react", "env"] }
                 ).code;
 
                 setCompiledCode(`
@@ -167,11 +186,15 @@ export default function PageUpdate() {
         }
     }, []);
 
-    const { getRootProps: getImageRootProps, getInputProps: getImageInputProps, isDragActive: isImageDragActive } = useDropzone({
+    const {
+        getRootProps: getImageRootProps,
+        getInputProps: getImageInputProps,
+        isDragActive: isImageDragActive,
+    } = useDropzone({
         onDrop: onImageDrop,
         accept: {
-            'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp'],
-            'video/*': ['.webm'],
+            "image/*": [".png", ".jpg", ".jpeg", ".gif", ".webp"],
+            "video/*": [".webm"],
         },
         maxFiles: 1,
     });
@@ -186,16 +209,12 @@ export default function PageUpdate() {
                             <Input
                                 type="number"
                                 value={pageId}
-                                onChange={e => setPageId(Number(e.target.value))}
+                                onChange={(e) => setPageId(Number(e.target.value))}
                                 className="w-24"
                                 placeholder="Page ID"
                                 min="0"
                             />
-                            <Button
-                                variant="secondary"
-                                onClick={loadPage}
-                                disabled={isLoading}
-                            >
+                            <Button variant="secondary" onClick={loadPage} disabled={isLoading}>
                                 {isLoading ? (
                                     <>
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -209,11 +228,7 @@ export default function PageUpdate() {
                         <div className="bg-muted px-4 py-2 rounded-lg text-sm font-medium">
                             Cost: 0.01 ETH
                         </div>
-                        <Button
-                            onClick={updatePage}
-                            disabled={isLoading}
-                            className="min-w-[160px]"
-                        >
+                        <Button onClick={updatePage} disabled={isLoading} className="min-w-[160px]">
                             {isLoading ? (
                                 <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -269,7 +284,11 @@ export default function PageUpdate() {
                             <div
                                 {...getImageRootProps()}
                                 className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
-                                    ${isImageDragActive ? "border-primary bg-primary/10" : "border-muted-foreground/25"}
+                                    ${
+                                        isImageDragActive
+                                            ? "border-primary bg-primary/10"
+                                            : "border-muted-foreground/25"
+                                    }
                                     ${isImageUploading ? "opacity-50 pointer-events-none" : ""}`}
                             >
                                 <input {...getImageInputProps()} />
@@ -282,11 +301,19 @@ export default function PageUpdate() {
                                 ) : (
                                     <>
                                         <p className="text-sm font-medium">
-                                            {uploadedImageUrl ? "Drop to replace thumbnail image" : "Drop thumbnail image here or click to select"}
+                                            {uploadedImageUrl
+                                                ? "Drop to replace thumbnail image"
+                                                : "Drop thumbnail image here or click to select"}
                                         </p>
                                         <p className="text-xs text-muted-foreground mt-1">
                                             {uploadedImageUrl ? (
-                                                <Image src={uploadedImageUrl} alt="Preview" className="mt-2 mx-auto" width={1024} height={1024} />
+                                                <Image
+                                                    src={uploadedImageUrl}
+                                                    alt="Preview"
+                                                    className="mt-2 mx-auto"
+                                                    width={1024}
+                                                    height={1024}
+                                                />
                                             ) : (
                                                 "Supports PNG, JPG, GIF, WEBP"
                                             )}
