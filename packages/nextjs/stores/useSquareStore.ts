@@ -39,6 +39,7 @@ export const useSquareStore = create<SquareStoreState>((set, get) => ({
         try {
             const totalSupply = await getTotalSupply();
             set({ totalSupply });
+            console.log("totalSupply", totalSupply);
             return totalSupply;
         } catch (error) {
             console.error("Error fetching total supply:", error);
@@ -49,7 +50,7 @@ export const useSquareStore = create<SquareStoreState>((set, get) => ({
     updateSquareState: (id: number, isVisible: boolean, baseIndex: number, isTooSmall: boolean) =>
         set((state) => {
             const zoomDepth = useSpiralStore.getState().zoomDepth;
-            const { patternLength } = goldenSpiralConstants;
+            const { patternLength, startingSquareIndex } = goldenSpiralConstants;
 
             // Calculate actual index based on zoom depth
             let actualIndex;

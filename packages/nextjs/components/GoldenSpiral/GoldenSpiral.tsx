@@ -7,6 +7,7 @@ import { SpiralSquare, Vector, goldenSpiralConstants } from "@/types/golden-spir
 import { useSpiralStore } from "@/stores/useSpiralStore";
 import { useSquareStore } from "@/stores/useSquareStore";
 import { ContentModal } from "@/components/content/ContentModal";
+import { getTotalSupply } from "@/app/actions/content";
 
 interface ModalData {
     content: string;
@@ -35,9 +36,6 @@ export default function GoldenSpiral({ className }: { className?: string }) {
         totalSupply,
         fetchTotalSupply,
     } = useSquareStore();
-
-    // const tsupply = fetchTotalSupply();
-    // console.log("tsupply", tsupply);
 
     const scaleRef = useRef(1);
     const targetScale = useRef(1);
@@ -288,6 +286,11 @@ export default function GoldenSpiral({ className }: { className?: string }) {
         setModalData(data);
         setIsModalOpen(true);
     };
+
+    // Add useEffect for fetching total supply
+    useEffect(() => {
+        fetchTotalSupply();
+    }, []); // Empty dependency array means this runs once on mount
 
     return (
         <div className={cn("relative w-full h-full overflow-hidden", className)}>

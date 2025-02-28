@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useSquareStore } from "@/stores/useSquareStore";
+import { useSpiralStore } from "@/stores/useSpiralStore";
 import { goldenSpiralConstants, SpiralSquare, Vector } from "@/types/golden-spiral";
 import { HeroCard } from "@/components/content/HeroCard";
 import { ContentCard } from "@/components/content/ContentCard";
@@ -58,10 +59,15 @@ export function GoldenSquareContainer({
     onCardClick,
 }: GoldenSquareContainerProps) {
     const elementRef = useRef<HTMLDivElement>(null);
-    const { updateSquareState, isSquareVisible, getIndex } = useSquareStore();
-    const squareActualIndex = getIndex(square.id);
+    const { updateSquareState, isSquareVisible, getIndex, totalSupply } = useSquareStore();
+
+    const squareActualIndex =
+        totalSupply - (getIndex(square.id) - goldenSpiralConstants.startingSquareIndex - 1);
+
     const { data, loading } = useContentFetch(squareActualIndex);
+
     const startingSquareIndex = goldenSpiralConstants.startingSquareIndex;
+    const { resetTargetScale } = useSpiralStore();
 
     // Memoize expensive calculations
     const { finalX, finalY, scaledSize, fontSize } = useMemo(() => {
@@ -104,7 +110,16 @@ export function GoldenSquareContainer({
         if (visible !== isCurrentlyVisible) {
             updateSquareState(square.id, visible, squareIndex || 0, isTooSmall);
         }
-    }, [finalX, finalY, scaledSize, square.id, squareIndex, updateSquareState, isSquareVisible]);
+    }, [
+        finalX,
+        finalY,
+        scaledSize,
+        square.id,
+        squareIndex,
+        updateSquareState,
+        isSquareVisible,
+        resetTargetScale,
+    ]);
 
     // Debounce visibility check
     const debouncedCheck = useDebounce(checkVisibility, 10);
