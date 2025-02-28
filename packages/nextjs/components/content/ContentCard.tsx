@@ -34,16 +34,20 @@ export function ContentCard({
     if (loading) {
         return (
             <div className="relative w-full h-full p-1 flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <Loader2 className="h-8 w-8 animate-spin text-chart-2" />
             </div>
         );
     }
 
-    // TODO: Add a placeholder image
     if (!image) {
         return (
-            <div className="relative w-full h-full p-1 flex items-center justify-center">
-                <span className="text-primary">No content available</span>
+            <div className="relative w-full h-full m-1 flex items-center justify-center bg-background/10">
+                <span
+                    className="text-chart-5 text-center font-medium font-rubik"
+                    style={{ fontSize: `${scaledSize * 0.03}px` }}
+                >
+                    No content available
+                </span>
             </div>
         );
     }
