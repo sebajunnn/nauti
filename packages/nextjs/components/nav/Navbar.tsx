@@ -118,7 +118,8 @@ export function Navbar() {
                                                 "bg-primary text-primary-foreground px-2 rounded-full",
                                                 "hover:bg-chart-3 hover:text-background",
                                                 "transition-colors duration-200 ease-in-out",
-                                                "text-sm font-medium"
+                                                "text-sm font-medium",
+                                                "flex items-center"
                                             )}
                                         >
                                             Publish
@@ -129,29 +130,30 @@ export function Navbar() {
                                                 "bg-primary text-primary-foreground px-2 rounded-full",
                                                 "hover:bg-chart-3 hover:text-background",
                                                 "transition-colors duration-200 ease-in-out",
-                                                "text-sm font-medium"
+                                                "text-sm font-medium",
+                                                "flex items-center"
                                             )}
                                         >
                                             Update
                                         </Link>
+                                        <button
+                                            onClick={() => setShowIndex(!showIndex)}
+                                            data-state={showIndex ? "on" : "off"}
+                                            className={cn(
+                                                "bg-primary text-primary-foreground px-1 rounded-full",
+                                                "hover:bg-chart-3 hover:text-background",
+                                                "transition-colors duration-200 ease-in-out",
+                                                "text-sm font-medium h-5",
+                                                "flex items-center gap-1"
+                                                // "data-[state=on]:bg-chart-3 data-[state=on]:text-background"
+                                            )}
+                                        >
+                                            <Settings size={14} className="" />
+                                        </button>
                                     </div>
-                                    <RainbowKitCustomConnectButton />
-
-                                    {/* <button
-                                        onClick={() => setShowIndex(!showIndex)}
-                                        data-state={showIndex ? "on" : "off"}
-                                        className={cn(
-                                            "bg-primary text-primary-foreground px-2 rounded-full",
-                                            "hover:bg-chart-3 hover:text-background",
-                                            "transition-colors duration-200 ease-in-out",
-                                            "text-sm font-medium",
-                                            "flex items-center gap-1"
-                                            // "data-[state=on]:bg-chart-3 data-[state=on]:text-background"
-                                        )}
-                                    >
-                                        Debug
-                                        <Settings size={14} className="" />
-                                    </button> */}
+                                    <div className="flex items-center gap-2">
+                                        <RainbowKitCustomConnectButton />
+                                    </div>
                                 </div>
                             </div>
 
