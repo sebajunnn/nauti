@@ -1,7 +1,7 @@
 import { create } from "zustand";
-import { SpiralSquare } from "@/types/golden-spiral";
-import { goldenSpiralConstants } from "@/types/golden-spiral";
+import { goldenSpiralConstants, SpiralSquare } from "@/types/golden-spiral";
 import { useSpiralStore } from "@/stores/useSpiralStore";
+import { getTotalSupply } from "@/app/actions/content";
 
 interface SquareState {
     isVisible: boolean;
@@ -9,7 +9,10 @@ interface SquareState {
 }
 
 interface SquareStoreState {
+    squares: SpiralSquare[];
     squareMap: Map<number, SquareState>;
+    totalSupply: number;
+    setSquares: (squares: SpiralSquare[]) => void;
     getIndex: (id: number) => number;
     updateSquareState: (
         id: number,
@@ -20,12 +23,28 @@ interface SquareStoreState {
     updateAllSquareIndex: (zoomDepth: number) => void;
     isSquareVisible: (id: number) => boolean;
     reset: (squares: SpiralSquare[]) => void;
+    fetchTotalSupply: () => Promise<number>;
 }
 
 export const useSquareStore = create<SquareStoreState>((set, get) => ({
+    squares: [],
     squareMap: new Map(),
+    totalSupply: 0,
+
+    setSquares: (squares: SpiralSquare[]) => set({ squares }),
 
     getIndex: (id) => get().squareMap.get(id)?.index ?? 0,
+
+    fetchTotalSupply: async (): Promise<number> => {
+        try {
+            const totalSupply = await getTotalSupply();
+            set({ totalSupply });
+            return totalSupply;
+        } catch (error) {
+            console.error("Error fetching total supply:", error);
+            return 0;
+        }
+    },
 
     updateSquareState: (id: number, isVisible: boolean, baseIndex: number, isTooSmall: boolean) =>
         set((state) => {

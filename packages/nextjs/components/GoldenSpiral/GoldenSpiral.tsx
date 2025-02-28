@@ -5,11 +5,8 @@ import { GoldenSquareContainer } from "@/components/goldenSpiral/GoldenSquareCon
 import { cn, debounce } from "@/lib/utils";
 import { SpiralSquare, Vector, goldenSpiralConstants } from "@/types/golden-spiral";
 import { useSpiralStore } from "@/stores/useSpiralStore";
-import { IndexStateOverlay } from "@/components/debug/IndexStateOverlay";
 import { useSquareStore } from "@/stores/useSquareStore";
 import { ContentModal } from "@/components/content/ContentModal";
-import { Navbar } from "@/components/nav/Navbar";
-import { SearchInput } from "@/components/nav/SearchInput";
 
 interface ModalData {
     content: string;
@@ -22,13 +19,40 @@ export default function GoldenSpiral({ className }: { className?: string }) {
     const containerRef = useRef<HTMLDivElement>(null);
     const [startingOffset, setStartingOffset] = useState<Vector>({ x: 0, y: 0 });
 
-    const { scale, zoomDepth, setScale, setZoomDepth, reset } = useSpiralStore();
-    const { reset: resetVisibility } = useSquareStore();
+    const {
+        scale,
+        zoomDepth,
+        setScale,
+        setZoomDepth,
+        reset,
+        resetTargetScale,
+        setResetTargetScale,
+    } = useSpiralStore();
+    const {
+        reset: resetVisibility,
+        squares,
+        setSquares,
+        totalSupply,
+        fetchTotalSupply,
+    } = useSquareStore();
+
+    // const tsupply = fetchTotalSupply();
+    // console.log("tsupply", tsupply);
 
     const scaleRef = useRef(1);
     const targetScale = useRef(1);
     const rafRef = useRef<number>(1);
     const lastWheelTime = useRef(0);
+
+    // Watch for reset flag changes
+    useEffect(() => {
+        if (resetTargetScale) {
+            targetScale.current = 1;
+            setScale(1);
+            setZoomDepth(0);
+            setResetTargetScale(false); // Reset the flag
+        }
+    }, [resetTargetScale]);
 
     // Fibonacci Calculations
     const {
@@ -42,7 +66,6 @@ export default function GoldenSpiral({ className }: { className?: string }) {
     } = goldenSpiralConstants;
 
     // State for golden spiral squares
-    const [squares, setSquares] = useState<SpiralSquare[]>([]);
     const [baseSize, setBaseSize] = useState(0);
     const baseSizeRatio = 1;
     const [modalData, setModalData] = useState<ModalData | null>(null);
@@ -287,8 +310,6 @@ export default function GoldenSpiral({ className }: { className?: string }) {
                     />
                 ))}
             </div>
-
-            <Navbar squares={squares} handleReset={handleReset} />
 
             <ContentModal
                 open={isModalOpen}

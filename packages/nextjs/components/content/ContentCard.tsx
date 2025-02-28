@@ -38,6 +38,7 @@ export function ContentCard({
         );
     }
 
+    // TODO: Add a placeholder image
     if (!image) {
         return (
             <div className="relative w-full h-full p-1 flex items-center justify-center">
