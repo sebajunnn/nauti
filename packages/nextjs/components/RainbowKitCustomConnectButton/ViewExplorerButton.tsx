@@ -6,7 +6,7 @@ export const ViewExplorerButton = ({ link }: { link?: string }) => {
 
     return (
         <>
-            <DropdownMenuItem asChild>
+            <DropdownMenuItem asChild className="rounded-lg">
                 <a href={link} target="_blank" rel="noopener noreferrer">
                     <ExternalLink className="h-4 w-4 mr-2" />
                     View on Explorer
@@ -15,4 +15,4 @@ export const ViewExplorerButton = ({ link }: { link?: string }) => {
             <DropdownMenuSeparator />
         </>
     );
-}; 
+};

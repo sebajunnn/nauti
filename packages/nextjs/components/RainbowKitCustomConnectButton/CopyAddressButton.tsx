@@ -13,13 +13,9 @@ export const CopyAddressButton = ({ address }: { address: Address }) => {
     };
 
     return (
-        <DropdownMenuItem onClick={copyToClipboard}>
-            {copied ? (
-                <Check className="h-4 w-4 mr-2" />
-            ) : (
-                <Copy className="h-4 w-4 mr-2" />
-            )}
+        <DropdownMenuItem onClick={copyToClipboard} className="rounded-lg">
+            {copied ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
             {copied ? "Copied!" : "Copy Address"}
         </DropdownMenuItem>
     );
-}; 
+};

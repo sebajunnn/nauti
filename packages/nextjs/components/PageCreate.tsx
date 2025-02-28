@@ -417,10 +417,10 @@ export default function PageCreate() {
                                                 {uploadedGlbUrl ? (
                                                     <div className="w-full h-full flex flex-col items-center justify-center gap-2">
                                                         <div className="w-full px-2">
-                                                            <p className="text-sm font-medium break-all">
+                                                            <p className="text-sm font-medium">
                                                                 Currently Uploaded:
                                                             </p>
-                                                            <p className="text-sm text-muted-foreground mt-1 break-all">
+                                                            <p className="text-sm text-muted-foreground mt-1 w-[150px] truncate mx-auto">
                                                                 {uploadedGlbUrl}
                                                             </p>
                                                         </div>

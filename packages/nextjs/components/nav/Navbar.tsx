@@ -9,6 +9,7 @@ import { IndexState } from "./IndexState";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { RainbowKitCustomConnectButton } from "@/components/RainbowKitCustomConnectButton";
 
 import {
     Accordion,
@@ -81,7 +82,7 @@ export function Navbar() {
                                         />
                                         <span className="text-base min-w-2">{zoomDepth}</span>
                                     </div>
-                                    <SearchInput className="w-28 h-6" />
+                                    <SearchInput className="min-w-28 h-6" />
                                     <div className="group">
                                         <AccordionTrigger className="py-2">
                                             <div className="flex flex-col items-start gap-0"></div>
@@ -103,63 +104,57 @@ export function Navbar() {
                             </div>
                         </div>
                         <AccordionContent className="px-4 py-2 bg-accent">
-                            <div
-                                className={cn(
-                                    "flex flex-row gap-2 justify-between",
-                                    showIndex && "pb-4"
-                                )}
-                            >
-                                <div className="flex flex-row gap-2">
-                                    <Link
-                                        href="/buildpage"
-                                        className={cn(
-                                            "bg-primary text-primary-foreground px-2 rounded-full",
-                                            "hover:bg-chart-3 hover:text-background",
-                                            "transition-colors duration-200 ease-in-out",
-                                            "text-sm font-medium"
-                                        )}
-                                    >
-                                        Publish
-                                    </Link>
-                                    <Link
-                                        href="/updatepage"
-                                        className={cn(
-                                            "bg-primary text-primary-foreground px-2 rounded-full",
-                                            "hover:bg-chart-3 hover:text-background",
-                                            "transition-colors duration-200 ease-in-out",
-                                            "text-sm font-medium"
-                                        )}
-                                    >
-                                        Update
-                                    </Link>
-                                    {/* <Link
-                                        href="/about"
-                                        className={cn(
-                                            "bg-primary text-primary-foreground px-2 rounded-full",
-                                            "hover:bg-chart-3 hover:text-background",
-                                            "transition-colors duration-200 ease-in-out",
-                                            "text-sm font-medium"
-                                        )}
-                                    >
-                                        About
-                                    </Link> */}
-                                </div>
-                                <button
-                                    onClick={() => setShowIndex(!showIndex)}
-                                    data-state={showIndex ? "on" : "off"}
+                            <div>
+                                <div
                                     className={cn(
-                                        "bg-primary text-primary-foreground px-2 rounded-full",
-                                        "hover:bg-chart-3 hover:text-background",
-                                        "transition-colors duration-200 ease-in-out",
-                                        "text-sm font-medium",
-                                        "flex items-center gap-1"
-                                        // "data-[state=on]:bg-chart-3 data-[state=on]:text-background"
+                                        "flex flex-row gap-2 justify-between",
+                                        showIndex && "pb-4"
                                     )}
                                 >
-                                    Debug
-                                    <Settings size={14} className="" />
-                                </button>
+                                    <div className="flex flex-row gap-2">
+                                        <Link
+                                            href="/buildpage"
+                                            className={cn(
+                                                "bg-primary text-primary-foreground px-2 rounded-full",
+                                                "hover:bg-chart-3 hover:text-background",
+                                                "transition-colors duration-200 ease-in-out",
+                                                "text-sm font-medium"
+                                            )}
+                                        >
+                                            Publish
+                                        </Link>
+                                        <Link
+                                            href="/updatepage"
+                                            className={cn(
+                                                "bg-primary text-primary-foreground px-2 rounded-full",
+                                                "hover:bg-chart-3 hover:text-background",
+                                                "transition-colors duration-200 ease-in-out",
+                                                "text-sm font-medium"
+                                            )}
+                                        >
+                                            Update
+                                        </Link>
+                                    </div>
+                                    <RainbowKitCustomConnectButton />
+
+                                    {/* <button
+                                        onClick={() => setShowIndex(!showIndex)}
+                                        data-state={showIndex ? "on" : "off"}
+                                        className={cn(
+                                            "bg-primary text-primary-foreground px-2 rounded-full",
+                                            "hover:bg-chart-3 hover:text-background",
+                                            "transition-colors duration-200 ease-in-out",
+                                            "text-sm font-medium",
+                                            "flex items-center gap-1"
+                                            // "data-[state=on]:bg-chart-3 data-[state=on]:text-background"
+                                        )}
+                                    >
+                                        Debug
+                                        <Settings size={14} className="" />
+                                    </button> */}
+                                </div>
                             </div>
+
                             {showIndex && <IndexState squares={squares} />}
                         </AccordionContent>
                     </AccordionItem>
