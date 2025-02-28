@@ -1,59 +1,61 @@
 import * as chains from "viem/chains";
-import { defineChain } from 'viem';
+import { defineChain } from "viem";
 import { hardhat } from "viem/chains";
 
 export type ScaffoldConfig = {
-  targetNetworks: readonly chains.Chain[];
-  pollingInterval: number;
-  alchemyApiKey: string;
-  walletConnectProjectId: string;
-  onlyLocalBurnerWallet: boolean;
+    targetNetworks: readonly chains.Chain[];
+    pollingInterval: number;
+    alchemyApiKey: string;
+    walletConnectProjectId: string;
+    onlyLocalBurnerWallet: boolean;
 };
 
 export const DEFAULT_ALCHEMY_API_KEY = "oKxs-03sij-U_N0iOlrSsZFr29-IqbuF";
 
-
 export const conduit = defineChain({
-  id: 55550, // Your custom chain ID
-  name: 'mammothon-g2-testnet-4a2w8v0xqy',
-  nativeCurrency: {
-    name: 'ETH',
-    symbol: 'ETH',
-    decimals: 18,
-  },
-  rpcUrls: {
-    default: { http: ['https://rpc-mammothon-g2-testnet-4a2w8v0xqy.t.conduit.xyz'] },
-    public: { http: ['https://rpc-mammothon-g2-testnet-4a2w8v0xqy.t.conduit.xyz'] },
-  },
-  blockExplorers: {
-    default: { name: 'Blockscout', url: 'https://explorer-mammothon-g2-testnet-4a2w8v0xqy.t.conduit.xyz' },
-  },
-  testnet: true, // Set to true if it's a testnet
+    id: 55550, // Your custom chain ID
+    name: "mammothon-g2-testnet-4a2w8v0xqy",
+    nativeCurrency: {
+        name: "ETH",
+        symbol: "ETH",
+        decimals: 18,
+    },
+    rpcUrls: {
+        default: { http: ["https://rpc-mammothon-g2-testnet-4a2w8v0xqy.t.conduit.xyz"] },
+        public: { http: ["https://rpc-mammothon-g2-testnet-4a2w8v0xqy.t.conduit.xyz"] },
+    },
+    blockExplorers: {
+        default: {
+            name: "Blockscout",
+            url: "https://explorer-mammothon-g2-testnet-4a2w8v0xqy.t.conduit.xyz",
+        },
+    },
+    testnet: true, // Set to true if it's a testnet
 });
 
-
 const scaffoldConfig = {
-  // The networks on which your DApp is live
-  targetNetworks: [hardhat], // TODO: change to conduit
+    // The networks on which your DApp is live
+    targetNetworks: [conduit], // TODO: change to conduit
 
-  // The interval at which your front-end polls the RPC servers for new data
-  // it has no effect if you only target the local network (default is 4000)
-  pollingInterval: 30000,
+    // The interval at which your front-end polls the RPC servers for new data
+    // it has no effect if you only target the local network (default is 4000)
+    pollingInterval: 30000,
 
-  // This is ours Alchemy's default API key.
-  // You can get your own at https://dashboard.alchemyapi.io
-  // It's recommended to store it in an env variable:
-  // .env.local for local testing, and in the Vercel/system env config for live apps.
-  alchemyApiKey: process.env.NEXT_PUBLIC_ALCHEMY_API_KEY || DEFAULT_ALCHEMY_API_KEY,
+    // This is ours Alchemy's default API key.
+    // You can get your own at https://dashboard.alchemyapi.io
+    // It's recommended to store it in an env variable:
+    // .env.local for local testing, and in the Vercel/system env config for live apps.
+    alchemyApiKey: process.env.NEXT_PUBLIC_ALCHEMY_API_KEY || DEFAULT_ALCHEMY_API_KEY,
 
-  // This is ours WalletConnect's default project ID.
-  // You can get your own at https://cloud.walletconnect.com
-  // It's recommended to store it in an env variable:
-  // .env.local for local testing, and in the Vercel/system env config for live apps.
-  walletConnectProjectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || "3a8170812b534d0ff9d794f19a901d64",
+    // This is ours WalletConnect's default project ID.
+    // You can get your own at https://cloud.walletconnect.com
+    // It's recommended to store it in an env variable:
+    // .env.local for local testing, and in the Vercel/system env config for live apps.
+    walletConnectProjectId:
+        process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || "3a8170812b534d0ff9d794f19a901d64",
 
-  // Only show the Burner Wallet when running on hardhat network
-  onlyLocalBurnerWallet: true,
+    // Only show the Burner Wallet when running on hardhat network
+    onlyLocalBurnerWallet: true,
 } as const satisfies ScaffoldConfig;
 
 export default scaffoldConfig;

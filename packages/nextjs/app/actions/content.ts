@@ -3,7 +3,7 @@
 import { createPublicClient, http } from "viem";
 import { hardhat } from "viem/chains";
 import deployedContracts from "@/contracts/deployedContracts";
-import { conduit } from "@/scaffold.config";
+import scaffoldConfig from "@/scaffold.config";
 
 interface ContentData {
     content: string;
@@ -14,7 +14,7 @@ interface ContentData {
 
 // Create a singleton public client instance
 const publicClient = createPublicClient({
-    chain: conduit,
+    chain: scaffoldConfig.targetNetworks[0],
     transport: http(),
     cacheTime: 5000, // Cache responses for 5 seconds
     batch: {
@@ -48,9 +48,10 @@ const decodeBase64TokenURI = (tokenURI: string): ContentData => {
 async function getChainContent(index: number): Promise<ContentData | null> {
     try {
         const chainData = await publicClient.readContract({
-            address: deployedContracts[targetNetwork.id].OnchainWebServer_v8.address as `0x${string}`,
+            address: deployedContracts[scaffoldConfig.targetNetworks[0].id].OnchainWebServer_v8
+                .address as `0x${string}`,
             functionName: "tokenURI",
-            abi: deployedContracts[targetNetwork.id].OnchainWebServer_v8.abi,
+            abi: deployedContracts[scaffoldConfig.targetNetworks[0].id].OnchainWebServer_v8.abi,
             args: [BigInt(index)],
         });
         const metadata = decodeBase64TokenURI(chainData);
@@ -102,9 +103,10 @@ export async function getBatchContent(indices: number[]): Promise<Record<number,
         // Try blockchain first using multicall
         const chainDataPromises = indices.map((index) =>
             publicClient.readContract({
-                address: deployedContracts[targetNetwork.id].OnchainWebServer_v8.address as `0x${string}`,
+                address: deployedContracts[scaffoldConfig.targetNetworks[0].id].OnchainWebServer_v8
+                    .address as `0x${string}`,
                 functionName: "tokenURI",
-                abi: deployedContracts[targetNetwork.id].OnchainWebServer_v8.abi,
+                abi: deployedContracts[scaffoldConfig.targetNetworks[0].id].OnchainWebServer_v8.abi,
                 args: [BigInt(index)],
             })
         );
@@ -154,9 +156,10 @@ export async function getBatchContent(indices: number[]): Promise<Record<number,
 export async function getTotalSupply(): Promise<number> {
     try {
         const totalSupply = await publicClient.readContract({
-            address: deployedContracts[31337].OnchainWebServer_v8.address as `0x${string}`,
+            address: deployedContracts[scaffoldConfig.targetNetworks[0].id].OnchainWebServer_v8
+                .address as `0x${string}`,
             functionName: "totalSupply",
-            abi: deployedContracts[31337].OnchainWebServer_v8.abi,
+            abi: deployedContracts[scaffoldConfig.targetNetworks[0].id].OnchainWebServer_v8.abi,
         });
 
         // We subtract 1 since the total supply includes token ID 0 which is not used
