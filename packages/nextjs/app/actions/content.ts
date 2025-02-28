@@ -23,18 +23,18 @@ const publicClient = createPublicClient({
 
 const decodeBase64TokenURI = (tokenURI: string): ContentData => {
     // Remove the "data:application/json;base64," prefix
-    const base64Json = tokenURI.replace('data:application/json;base64,', '');
+    const base64Json = tokenURI.replace("data:application/json;base64,", "");
 
     // Decode base64 to get the JSON string
-    const jsonString = Buffer.from(base64Json, 'base64').toString();
+    const jsonString = Buffer.from(base64Json, "base64").toString();
 
     // Parse the JSON
     const metadata = JSON.parse(jsonString);
 
     // Extract the HTML content from animation_url
     // animation_url is in format "data:text/html;base64,<base64-content>"
-    const htmlBase64 = metadata.animation_url.replace('data:text/html;base64,', '');
-    const content = Buffer.from(htmlBase64, 'base64').toString();
+    const htmlBase64 = metadata.animation_url.replace("data:text/html;base64,", "");
+    const content = Buffer.from(htmlBase64, "base64").toString();
 
     return {
         content,
@@ -42,7 +42,7 @@ const decodeBase64TokenURI = (tokenURI: string): ContentData => {
         name: metadata.name,
         description: metadata.description,
     };
-}
+};
 
 async function getChainContent(index: number): Promise<ContentData | null> {
     try {
@@ -77,7 +77,8 @@ async function getApiContent(index: number): Promise<ContentData> {
     } catch (error) {
         console.error(`Failed to fetch content for index ${index}:`, error);
         throw new Error(
-            `Failed to fetch content for index ${index}: ${error instanceof Error ? error.message : "Unknown error"
+            `Failed to fetch content for index ${index}: ${
+                error instanceof Error ? error.message : "Unknown error"
             }`
         );
     }
@@ -120,7 +121,10 @@ export async function getBatchContent(indices: number[]): Promise<Record<number,
                     content: metadata.content,
                     name: metadata.name,
                     description: metadata.description,
-                    image: !metadata.image || metadata.image === "" ? "https://i.pinimg.com/736x/ce/25/20/ce2520ca22bc5317176c18b437928525.jpg" : metadata.image
+                    image:
+                        !metadata.image || metadata.image === ""
+                            ? "https://i.pinimg.com/736x/ce/25/20/ce2520ca22bc5317176c18b437928525.jpg"
+                            : metadata.image,
                 };
             } else {
                 fallbackIndices.push(indices[idx]);
@@ -143,5 +147,21 @@ export async function getBatchContent(indices: number[]): Promise<Record<number,
     } catch (error) {
         console.error("Batch fetch failed:", error);
         throw new Error("Failed to fetch batch content");
+    }
+}
+
+export async function getTotalSupply(): Promise<number> {
+    try {
+        const totalSupply = await publicClient.readContract({
+            address: deployedContracts[31337].OnchainWebServer_v8.address as `0x${string}`,
+            functionName: "totalSupply",
+            abi: deployedContracts[31337].OnchainWebServer_v8.abi,
+        });
+
+        // We subtract 1 since the total supply includes token ID 0 which is not used
+        return Number(totalSupply) - 1;
+    } catch (error) {
+        console.error("Error fetching total supply:", error);
+        return 0;
     }
 }

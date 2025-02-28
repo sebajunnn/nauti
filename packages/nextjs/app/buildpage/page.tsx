@@ -1,21 +1,11 @@
-'use client';
+"use client";
 
-import { Header } from "@/components/Header";
 import PageCreate from "@/components/PageCreate";
 
 export default function BuildPage() {
-  return (
-    <div className={`flex flex-col min-h-screen `}>
-      <Header />
-      <main className="relative flex flex-col flex-1">
-        <div className="flex flex-col gap-8 w-full mx-auto">
-          <div className="grid grid-cols-1 gap-8">
-            <div className="bg-base-100 rounded-lg shadow">
-              <PageCreate />
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
-  );
+    return (
+        <main className={`flex flex-col min-h-screen bg-primary-foreground overflow-hidden`}>
+            <PageCreate />
+        </main>
+    );
 }

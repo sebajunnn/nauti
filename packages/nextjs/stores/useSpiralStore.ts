@@ -8,10 +8,12 @@ interface SpiralStoreState {
     zoomDepth: number;
     offset: Vector;
     startingOffset: Vector;
+    resetTargetScale: boolean;
     setScale: (scale: number) => void;
     setZoomDepth: (depth: number) => void;
     setOffset: (offset: Vector | ((current: Vector) => Vector)) => void;
     setStartingOffset: (offset: Vector) => void;
+    setResetTargetScale: (shouldReset: boolean) => void;
     zoomToSquare: (targetIndex: number) => void;
     reset: () => void;
 }
@@ -21,6 +23,7 @@ export const useSpiralStore = create<SpiralStoreState>((set, get) => ({
     zoomDepth: 0,
     offset: { x: 0, y: 0 },
     startingOffset: { x: 0, y: 0 },
+    resetTargetScale: false,
     setScale: (scale) => set({ scale }),
     setZoomDepth: (depth: number) => {
         set({ zoomDepth: depth });
@@ -32,6 +35,7 @@ export const useSpiralStore = create<SpiralStoreState>((set, get) => ({
             offset: typeof offset === "function" ? offset(state.offset) : offset,
         })),
     setStartingOffset: (offset) => set({ startingOffset: offset }),
+    setResetTargetScale: (shouldReset) => set({ resetTargetScale: shouldReset }),
     zoomToSquare: (targetIndex: number) => {
         const { patternLength, resetThreshold } = goldenSpiralConstants;
         const targetDepth = Math.floor(targetIndex / patternLength);

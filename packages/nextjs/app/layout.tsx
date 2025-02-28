@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Providers } from "@/components/Providers";
 import "@rainbow-me/rainbowkit/styles.css";
+import { Navbar } from "@/components/nav/Navbar";
 
 const rubik = localFont({
     src: [
@@ -160,9 +161,11 @@ export default function RootLayout({
                     // enableSystem
                     disableTransitionOnChange
                 >
-                    <Providers>{children}</Providers>
+                    <Providers>
+                        <Navbar />
+                        {children}
+                    </Providers>
                 </ThemeProvider>
-                {/* <NoiseOverlay /> */}
             </body>
         </html>
     );

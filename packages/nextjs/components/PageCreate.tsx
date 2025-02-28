@@ -4,7 +4,13 @@ import { useEffect, useState, useCallback } from "react";
 import deployedContracts from "../contracts/deployedContracts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -24,7 +30,7 @@ export default function PageCreate() {
     const [content, setContent] = useState("<h1>Hello, Web3!</h1>");
     const [editedGLB, setEditedGLB] = useState(false);
     const [editedReact, setEditedReact] = useState(false);
-    const [language, setLanguage] = useState("html");
+    const [language, setLanguage] = useState("glb");
     const [compiledCode, setCompiledCode] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -57,10 +63,10 @@ export default function PageCreate() {
                 abi: deployedContracts[31337].OnchainWebServer_v8.abi,
                 functionName: "mintPage",
                 args: [
-                    (language === "jsx" || language === "tsx") ? compiledCode : content,
+                    language === "jsx" || language === "tsx" ? compiledCode : content,
                     name,
                     description,
-                    uploadedImageUrl
+                    uploadedImageUrl,
                 ],
                 value: parseEther("0.01"),
             });
@@ -75,18 +81,42 @@ export default function PageCreate() {
 
     const getEditorExtension = () => {
         if (language === "html" || language === "glb") return html();
-        if (language === "jsx" || language === "tsx") return javascript({ jsx: true, typescript: language === "tsx" });
+        if (language === "jsx" || language === "tsx")
+            return javascript({ jsx: true, typescript: language === "tsx" });
         return html();
     };
 
     useEffect(() => {
+        if (language === "glb") {
+            setContent(getGLBTemplate());
+            setEditedGLB(true);
+        } else if ((language === "jsx" || language === "tsx") && !editedReact) {
+            setContent(getReactTemplate());
+            setEditedReact(true);
+        } else if (language === "html" && content === "<h1>Hello, Web3!</h1>") {
+            setContent(getHTMLTemplate());
+        }
+
+        // Reset editedReact when switching between JSX and TSX
         if (language === "jsx" || language === "tsx") {
-            if (!content.trim().startsWith("function MyComponent()")) {
-                setError("React component name should always be MyComponent");
-            } else {
-                setError(null);
-            }
+            setEditedReact(false);
+        }
+    }, [language]);
+
+    useEffect(() => {
+        if (language === "jsx" || language === "tsx") {
             try {
+                if (content.includes("<!DOCTYPE html>")) {
+                    // If switching from GLB/HTML to JSX/TSX, reset to React template
+                    setContent(getReactTemplate());
+                    return;
+                }
+
+                const babelOptions = {
+                    presets: ["react", "env"],
+                    filename: language === "tsx" ? "component.tsx" : "component.jsx",
+                };
+
                 const transformedCode = Babel.transform(
                     `
           function App() {
@@ -95,7 +125,7 @@ export default function PageCreate() {
           }
           ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
           `,
-                    { presets: ["react", "env"] },
+                    babelOptions
                 ).code;
 
                 setCompiledCode(`
@@ -124,63 +154,51 @@ export default function PageCreate() {
         }
     }, [content, language]);
 
-    useEffect(() => {
-        if (language === "glb" && !editedGLB) {
-            setContent(getGLBTemplate());
-            setEditedGLB(true);
-        }
-    }, [language, editedGLB]);
+    const onDrop = useCallback(
+        async (acceptedFiles: File[]) => {
+            const file = acceptedFiles[0];
+            if (!file) return;
 
-    useEffect(() => {
-        if ((language === "jsx" || language === "tsx") && !editedReact) {
-            setContent(getReactTemplate());
-            setEditedReact(true);
-        }
-    }, [language, editedReact]);
+            setIsUploading(true);
+            setError(null);
 
-    const onDrop = useCallback(async (acceptedFiles: File[]) => {
-        const file = acceptedFiles[0];
-        if (!file) return;
+            try {
+                const formData = new FormData();
+                formData.append("file", file);
 
-        setIsUploading(true);
-        setError(null);
+                const response = await fetch("/api/upload", {
+                    method: "POST",
+                    body: formData,
+                });
 
-        try {
-            const formData = new FormData();
-            formData.append("file", file);
+                if (!response.ok) {
+                    notification.error("Upload failed");
+                }
 
-            const response = await fetch("/api/upload", {
-                method: "POST",
-                body: formData,
-            });
+                const data = await response.json();
+                const ipfsUrl = `https://ipfs.io/ipfs/${data.IpfsHash}`;
 
-            if (!response.ok) {
-                notification.error("Upload failed");
+                setUploadedGlbUrl(ipfsUrl);
+                // Update content with new GLB URL
+                if (language === "glb") {
+                    setContent((prev) =>
+                        prev.replace(/src="https?:\/\/[^\/]+\/ipfs\/[^"]+"/, `src="${ipfsUrl}"`)
+                    );
+                }
+            } catch (err) {
+                console.error("Upload error:", err);
+                setError("Failed to upload GLB file");
+            } finally {
+                setIsUploading(false);
             }
-
-            const data = await response.json();
-            const ipfsUrl = `https://ipfs.io/ipfs/${data.IpfsHash}`;
-
-            setUploadedGlbUrl(ipfsUrl);
-            // Update content with new GLB URL
-            if (language === "glb") {
-                setContent(prev => prev.replace(
-                    /src="https?:\/\/[^\/]+\/ipfs\/[^"]+"/,
-                    `src="${ipfsUrl}"`
-                ));
-            }
-        } catch (err) {
-            console.error("Upload error:", err);
-            setError("Failed to upload GLB file");
-        } finally {
-            setIsUploading(false);
-        }
-    }, [language]);
+        },
+        [language]
+    );
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,
         accept: {
-            'model/gltf-binary': ['.glb'],
+            "model/gltf-binary": [".glb"],
         },
         maxFiles: 1,
     });
@@ -217,28 +235,28 @@ export default function PageCreate() {
         }
     }, []);
 
-    const { getRootProps: getImageRootProps, getInputProps: getImageInputProps, isDragActive: isImageDragActive } = useDropzone({
+    const {
+        getRootProps: getImageRootProps,
+        getInputProps: getImageInputProps,
+        isDragActive: isImageDragActive,
+    } = useDropzone({
         onDrop: onImageDrop,
         accept: {
-            'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp'],
+            "image/*": [".png", ".jpg", ".jpeg", ".gif", ".webp"],
         },
         maxFiles: 1,
     });
 
     return (
-        <div className="container mx-auto p-6 space-y-6">
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+        <div className="w-full h-screen p-2 mx-auto space-y-0 space-x-0 flex flex-row gap-2 overflow-hidden">
+            <div className="flex-1 flex flex-col overflow-hidden bg-background rounded-4xl p-0">
+                <CardHeader className="flex flex-row items-center justify-between p-4 flex-none">
                     <CardTitle className="text-2xl font-bold">Create Web3 Page</CardTitle>
                     <div className="flex items-center gap-4">
                         <div className="bg-muted px-4 py-2 rounded-lg text-sm font-medium">
                             Cost: 0.01 ETH
                         </div>
-                        <Button
-                            onClick={createPage}
-                            disabled={isLoading}
-                            className="min-w-[160px]"
-                        >
+                        <Button onClick={createPage} disabled={isLoading} className="min-w-[160px]">
                             {isLoading ? (
                                 <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -251,39 +269,35 @@ export default function PageCreate() {
                     </div>
                 </CardHeader>
 
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 flex-1 overflow-hidden flex flex-col">
                     {error && (
                         <Alert variant="destructive">
                             <AlertDescription>{error}</AlertDescription>
                         </Alert>
                     )}
 
-                    <div className="grid grid-cols-1 gap-4">
-                        <div className="space-y-4">
-                            <div className="flex gap-4">
-                                <Select
-                                    value={language}
-                                    onValueChange={(value) => setLanguage(value)}
-                                >
-                                    <SelectTrigger className="w-[180px]">
-                                        <SelectValue placeholder="Select language" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="html">HTML</SelectItem>
-                                        <SelectItem value="jsx">JavaScript (JSX)</SelectItem>
-                                        <SelectItem value="tsx">TypeScript (TSX)</SelectItem>
-                                        <SelectItem value="glb">GLB</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                    <div className="flex flex-col gap-4 h-full min-h-0">
+                        <div className="flex gap-4 flex-none">
+                            <Select value={language} onValueChange={(value) => setLanguage(value)}>
+                                <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder="Select language" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="html">HTML</SelectItem>
+                                    <SelectItem value="jsx">JavaScript (JSX)</SelectItem>
+                                    <SelectItem value="tsx">TypeScript (TSX)</SelectItem>
+                                    <SelectItem value="glb">GLB</SelectItem>
+                                </SelectContent>
+                            </Select>
 
-                                <Input
-                                    placeholder="Enter page name"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    className="flex-1"
-                                />
-                            </div>
-
+                            <Input
+                                placeholder="Enter page name"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                className="flex-1"
+                            />
+                        </div>
+                        <div className="flex flex-row gap-4 flex-none">
                             <Textarea
                                 placeholder="Enter page description"
                                 value={description}
@@ -295,8 +309,12 @@ export default function PageCreate() {
                             <div
                                 {...getImageRootProps()}
                                 className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
-                                    ${isImageDragActive ? "border-primary bg-primary/10" : "border-muted-foreground/25"}
-                                    ${isImageUploading ? "opacity-50 pointer-events-none" : ""}`}
+                                ${
+                                    isImageDragActive
+                                        ? "border-primary bg-primary/10"
+                                        : "border-muted-foreground/25"
+                                }
+                                ${isImageUploading ? "opacity-50 pointer-events-none" : ""}`}
                             >
                                 <input {...getImageInputProps()} />
                                 <ImageIcon className="w-8 h-8 mx-auto mb-4 text-muted-foreground" />
@@ -308,11 +326,19 @@ export default function PageCreate() {
                                 ) : (
                                     <>
                                         <p className="text-sm font-medium">
-                                            {uploadedImageUrl ? "Drop to replace thumbnail image" : "Drop thumbnail image here or click to select"}
+                                            {uploadedImageUrl
+                                                ? "Drop to replace thumbnail image"
+                                                : "Drop thumbnail image here or click to select"}
                                         </p>
                                         <p className="text-xs text-muted-foreground mt-1">
                                             {uploadedImageUrl ? (
-                                                <Image src={uploadedImageUrl} alt="Preview" className="mt-2 mx-auto" width={1024} height={1024} />
+                                                <Image
+                                                    src={uploadedImageUrl}
+                                                    alt="Preview"
+                                                    className="mt-2 mx-auto"
+                                                    width={1024}
+                                                    height={1024}
+                                                />
                                             ) : (
                                                 "Supports PNG, JPG, GIF, WEBP"
                                             )}
@@ -347,45 +373,58 @@ export default function PageCreate() {
                                     ) : (
                                         <>
                                             <p className="text-sm font-medium">
-                                                {uploadedGlbUrl ? "Drop to replace GLB file" : "Drop GLB file here or click to select"}
+                                                {uploadedGlbUrl
+                                                    ? "Drop to replace GLB file"
+                                                    : "Drop GLB file here or click to select"}
                                             </p>
                                             <p className="text-xs text-muted-foreground mt-1">
-                                                {uploadedGlbUrl ? "Current: " + uploadedGlbUrl : "Supports .glb files"}
+                                                {uploadedGlbUrl
+                                                    ? "Current: " + uploadedGlbUrl
+                                                    : "Supports .glb files"}
                                             </p>
                                         </>
                                     )}
                                 </div>
                             )}
-
-                            <div className="border rounded-lg overflow-hidden">
-                                <CodeMirror
-                                    value={content}
-                                    height="calc(100vh - 32rem)"
-                                    extensions={[getEditorExtension()]}
-                                    theme={oneDark}
-                                    onChange={(val) => setContent(val)}
-                                />
-                            </div>
                         </div>
 
-                        <Card className="bg-background">
-                            <CardHeader>
-                                <CardTitle className="text-sm font-medium">Preview</CardTitle>
-                            </CardHeader>
-                            <CardContent className="p-0 aspect-square">
-                                <div className="w-full h-full bg-white rounded-lg overflow-hidden">
-                                    <iframe
-                                        srcDoc={language === "html" ? content : compiledCode}
-                                        className="w-full h-full border-0"
-                                        title="preview"
-                                        sandbox="allow-scripts allow-same-origin"
-                                    />
-                                </div>
-                            </CardContent>
-                        </Card>
+                        <div className="flex-1 min-h-0 border rounded-2xl overflow-auto">
+                            <CodeMirror
+                                value={content}
+                                basicSetup={{
+                                    lineNumbers: true,
+                                    highlightActiveLineGutter: true,
+                                    highlightActiveLine: true,
+                                }}
+                                style={{ height: "100%", minHeight: "100%" }}
+                                height="100%"
+                                extensions={[getEditorExtension()]}
+                                theme={oneDark}
+                                onChange={(val) => setContent(val)}
+                            />
+                        </div>
                     </div>
                 </CardContent>
-            </Card>
+            </div>
+            <div className="flex-1 h-full rounded-4xl bg-none overflow-hidden flex flex-col">
+                <CardContent className="p-0 flex-1 overflow-auto shadow-none outline-none border-0 ring-0 rounded-none">
+                    <div className="w-full h-full bg-none rounded-none overflow-hidden">
+                        <iframe
+                            srcDoc={`
+                                <style>
+                                    ::-webkit-scrollbar { display: none; }
+                                    * { -ms-overflow-style: none; scrollbar-width: none; }
+                                    html, body { margin: 0; padding: 0; }
+                                </style>
+                                ${language === "html" ? content : compiledCode}
+                            `}
+                            className="w-full h-full border-0"
+                            title="preview"
+                            sandbox="allow-scripts allow-same-origin"
+                        />
+                    </div>
+                </CardContent>
+            </div>
         </div>
     );
 }
@@ -396,8 +435,21 @@ const getGLBTemplate = () => {
 <html lang="en">
 <head>
     <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(45deg, #1e1e2d, #2d2d45);
+            overflow: hidden;
+        }
+        model-viewer {
+            width: 100vw;
+            height: 100vh;
+            --poster-color: transparent;
+        }
+    </style>
 </head>
-<body style="margin: 0; overflow: hidden; background: black;">
+<body>
     <model-viewer
         src="https://ipfs.io/ipfs/QmPute6BHeBUVsccWJ5m5gPcqB8Up3v5am5ahZZX3jNT76"
         alt="Mr Shiba Inu"
@@ -406,11 +458,9 @@ const getGLBTemplate = () => {
         ar
         ar-modes="webxr scene-viewer quick-look"
         shadow-intensity="1"
-        style="width: 100vw; height: 100vh;"
     ></model-viewer>
 </body>
 </html>
-
   `;
 };
 
@@ -520,4 +570,48 @@ function MyComponent() {
   );
 }
   `;
+};
+
+const getHTMLTemplate = () => {
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web3 Page</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            background: linear-gradient(45deg, #2d2d45, #3d3d60);
+            color: white;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, #7928CA, #FF0080);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to Web3</h1>
+        <p>This is your decentralized webpage. Edit this content to create something amazing!</p>
+    </div>
+</body>
+</html>`;
 };
