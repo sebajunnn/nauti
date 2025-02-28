@@ -140,8 +140,16 @@ const sprat = localFont({
 });
 
 export const metadata: Metadata = {
-    title: "Nauti",
+    title: {
+        template: "%s · Nauti",
+        default: "Nauti",
+    },
     description: "Eternal Web3 Pages",
+    appleWebApp: {
+        capable: true,
+        title: "Nauti",
+        statusBarStyle: "black-translucent",
+    },
 };
 
 export default function RootLayout({

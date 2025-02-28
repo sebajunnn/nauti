@@ -1,13 +1,14 @@
 "use client";
 
-import { SpiralSquare } from "@/types/golden-spiral";
-import { Shell, Settings } from "lucide-react";
+import { Settings } from "lucide-react";
 import { useSpiralStore } from "@/stores/useSpiralStore";
 import { useSquareStore } from "@/stores/useSquareStore";
 import { useState } from "react";
 import { SearchInput } from "./SearchInput";
 import { IndexState } from "./IndexState";
 import Link from "next/link";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 import {
     Accordion,
@@ -18,12 +19,14 @@ import {
 import { cn } from "@/lib/utils";
 
 export function Navbar() {
+    const router = useRouter();
     const { zoomDepth, setResetTargetScale } = useSpiralStore();
     const { squares } = useSquareStore();
     const [showIndex, setShowIndex] = useState(false);
 
     const handleReset = () => {
         setResetTargetScale(true);
+        router.push("/");
     };
 
     // bg-[hsl(222,88%,10%)]
@@ -46,9 +49,9 @@ export function Navbar() {
                                 <button
                                     className={cn(
                                         "flex items-center gap-2 h-8",
-                                        "pl-4 pr-3 ",
+                                        "pl-4 pr-3",
                                         "bg-background hover:bg-chart-1",
-                                        "text-black hover:text-background",
+                                        "text-black hover:text-foreground",
                                         "transition-colors duration-200 ease-in-out"
                                     )}
                                     onClick={handleReset}
@@ -69,7 +72,13 @@ export function Navbar() {
                                     )}
                                 >
                                     <div className="flex items-center gap-1 text-primary translate-y-[1px] pr-1">
-                                        <Shell size={16} />
+                                        <Image
+                                            src="/nauti-logo-y.svg"
+                                            alt="Nauti Logo"
+                                            width={16}
+                                            height={16}
+                                            className="text-primary"
+                                        />
                                         <span className="text-base min-w-2">{zoomDepth}</span>
                                     </div>
                                     <SearchInput className="w-28 h-6" />

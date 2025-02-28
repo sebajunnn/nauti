@@ -25,6 +25,7 @@ import { useWriteContract, useChainId } from "wagmi";
 import { useDropzone } from "react-dropzone";
 import { notification } from "@/utils/scaffold-eth";
 import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 export default function PageCreate() {
     const chainId = useChainId();
@@ -34,6 +35,7 @@ export default function PageCreate() {
     const [language, setLanguage] = useState("glb");
     const [compiledCode, setCompiledCode] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [isEditorLoading, setIsEditorLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
@@ -159,6 +161,14 @@ export default function PageCreate() {
         }
     }, [content, language]);
 
+    useEffect(() => {
+        // Short timeout to ensure CodeMirror is mounted
+        const timer = setTimeout(() => {
+            setIsEditorLoading(false);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, []);
+
     const onDrop = useCallback(
         async (acceptedFiles: File[]) => {
             const file = acceptedFiles[0];
@@ -254,19 +264,35 @@ export default function PageCreate() {
 
     return (
         <div className="w-full h-screen p-2 mx-auto space-y-0 space-x-0 flex flex-row gap-2 overflow-hidden">
-            <div className="flex-1 flex flex-col overflow-hidden bg-background rounded-4xl p-0">
-                <CardHeader className="flex flex-row items-center justify-between p-4 flex-none">
-                    <CardTitle className="text-2xl font-bold">Create Web3 Page</CardTitle>
-                    <div className="flex items-center gap-4">
-                        <div className="bg-muted px-4 py-2 rounded-lg text-sm font-medium">
+            <div className="flex-1 flex flex-col overflow-hidden bg-accent rounded-4xl p-0">
+                <CardHeader className="flex flex-row items-center justify-between py-0 flex-none bg-white">
+                    <div className="flex items-center gap-2 pt-2">
+                        <Image
+                            src="/nauti-logo-b.svg"
+                            alt="Nauti Logo"
+                            width={24}
+                            height={24}
+                            className="text-primary"
+                        />
+                        <CardTitle className="text-3xl font-bold tracking-tighter font-rubik">
+                            Publish your Web3 Page
+                        </CardTitle>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <div className="bg-muted h-7 px-3 flex items-center rounded-xl text-sm font-medium">
                             Cost: 0.01 ETH
                         </div>
-                        <Button onClick={createPage} disabled={isLoading} className="min-w-[160px]">
+                        <Button
+                            onClick={createPage}
+                            disabled={isLoading}
+                            className="min-w-[160px] h-7 px-1 rounded-xl hover:bg-chart-3 hover:text-white"
+                        >
                             {isLoading ? (
-                                <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                <div className="flex items-center gap-2">
+                                    <Loader2 className="h-4 w-4 animate-spin" />
                                     Creating...
-                                </>
+                                </div>
                             ) : (
                                 "Deploy to Blockchain"
                             )}
@@ -274,7 +300,7 @@ export default function PageCreate() {
                     </div>
                 </CardHeader>
 
-                <CardContent className="space-y-4 flex-1 overflow-hidden flex flex-col">
+                <CardContent className="space-y-4 flex-1 overflow-hidden flex flex-col pt-4">
                     {error && (
                         <Alert variant="destructive">
                             <AlertDescription>{error}</AlertDescription>
@@ -282,16 +308,24 @@ export default function PageCreate() {
                     )}
 
                     <div className="flex flex-col gap-4 h-full min-h-0">
-                        <div className="flex gap-4 flex-none">
+                        <div className="flex gap-2 flex-none">
                             <Select value={language} onValueChange={(value) => setLanguage(value)}>
-                                <SelectTrigger className="w-[180px]">
+                                <SelectTrigger className="w-[180px] bg-background rounded-xl">
                                     <SelectValue placeholder="Select language" />
                                 </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="html">HTML</SelectItem>
-                                    <SelectItem value="jsx">JavaScript (JSX)</SelectItem>
-                                    <SelectItem value="tsx">TypeScript (TSX)</SelectItem>
-                                    <SelectItem value="glb">GLB</SelectItem>
+                                <SelectContent className="bg-background rounded-xl">
+                                    <SelectItem className="rounded-lg" value="html">
+                                        HTML
+                                    </SelectItem>
+                                    <SelectItem className="rounded-lg" value="jsx">
+                                        JavaScript (JSX)
+                                    </SelectItem>
+                                    <SelectItem className="rounded-lg" value="tsx">
+                                        TypeScript (TSX)
+                                    </SelectItem>
+                                    <SelectItem className="rounded-lg" value="glb">
+                                        GLB
+                                    </SelectItem>
                                 </SelectContent>
                             </Select>
 
@@ -299,114 +333,172 @@ export default function PageCreate() {
                                 placeholder="Enter page name"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                className="flex-1"
+                                className="flex-1 bg-background rounded-xl"
                             />
                         </div>
-                        <div className="flex flex-row gap-4 flex-none">
-                            <Textarea
-                                placeholder="Enter page description"
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                                className="min-h-[100px]"
-                            />
-
-                            {/* Image Upload Section */}
-                            <div
-                                {...getImageRootProps()}
-                                className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
+                        <div className="flex flex-row gap-2 flex-none h-[180px]">
+                            <div className="flex-shrink-0 bg-background rounded-xl p-2 w-[180px] h-full">
+                                <div
+                                    {...getImageRootProps()}
+                                    className={`border-2 w-full h-full border-dashed
+                                        rounded-lg text-center cursor-pointer
+                                        transition-colors flex flex-col items-center
+                                        justify-center
                                 ${
                                     isImageDragActive
                                         ? "border-primary bg-primary/10"
                                         : "border-muted-foreground/25"
                                 }
-                                ${isImageUploading ? "opacity-50 pointer-events-none" : ""}`}
-                            >
-                                <input {...getImageInputProps()} />
-                                <ImageIcon className="w-8 h-8 mx-auto mb-4 text-muted-foreground" />
-                                {isImageUploading ? (
-                                    <div className="flex items-center justify-center gap-2">
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                        <p>Uploading thumbnail image...</p>
-                                    </div>
-                                ) : (
-                                    <>
-                                        <p className="text-sm font-medium">
-                                            {uploadedImageUrl
-                                                ? "Drop to replace thumbnail image"
-                                                : "Drop thumbnail image here or click to select"}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground mt-1">
-                                            {uploadedImageUrl ? (
-                                                <Image
-                                                    src={uploadedImageUrl}
-                                                    alt="Preview"
-                                                    className="mt-2 mx-auto"
-                                                    width={1024}
-                                                    height={1024}
-                                                />
-                                            ) : (
-                                                "Supports PNG, JPG, GIF, WEBP"
-                                            )}
-                                        </p>
-                                    </>
-                                )}
-                            </div>
-
-                            {/* GLB file url */}
-                            {language === "glb" && uploadedGlbUrl && (
-                                <Alert>
-                                    <AlertDescription className="break-all">
-                                        Uploaded GLB URL: {uploadedGlbUrl}
-                                    </AlertDescription>
-                                </Alert>
-                            )}
-
-                            {language === "glb" && (
-                                <div
-                                    {...getRootProps()}
-                                    className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
-                    ${isDragActive ? "border-primary bg-primary/10" : "border-muted-foreground/25"}
-                    ${isUploading ? "opacity-50 pointer-events-none" : ""}`}
+                                ${isImageUploading ? "opacity-50 pointer-events-none" : ""}}
+                                ${uploadedImageUrl ? "p-1" : "p-4"}`}
                                 >
-                                    <input {...getInputProps()} />
-                                    <Upload className="w-8 h-8 mx-auto mb-4 text-muted-foreground" />
-                                    {isUploading ? (
+                                    <input {...getImageInputProps()} />
+                                    {isImageUploading ? (
                                         <div className="flex items-center justify-center gap-2">
                                             <Loader2 className="h-4 w-4 animate-spin" />
-                                            <p>Uploading to IPFS...</p>
+                                            <p>Uploading thumbnail image...</p>
                                         </div>
                                     ) : (
                                         <>
-                                            <p className="text-sm font-medium">
-                                                {uploadedGlbUrl
-                                                    ? "Drop to replace GLB file"
-                                                    : "Drop GLB file here or click to select"}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground mt-1">
-                                                {uploadedGlbUrl
-                                                    ? "Current: " + uploadedGlbUrl
-                                                    : "Supports .glb files"}
-                                            </p>
+                                            {uploadedImageUrl ? (
+                                                <div className="w-full h-full relative aspect-square">
+                                                    <Image
+                                                        src={uploadedImageUrl}
+                                                        alt="Preview"
+                                                        fill
+                                                        className="object-contain"
+                                                        priority
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <ImageIcon className="w-8 h-8 mb-4 text-muted-foreground" />
+                                                    <p className="text-sm font-medium">
+                                                        Drop thumbnail image here or click to select
+                                                    </p>
+                                                    <p className="text-xs text-muted-foreground mt-1">
+                                                        Supports PNG, JPG, GIF, WEBP
+                                                    </p>
+                                                </>
+                                            )}
                                         </>
                                     )}
                                 </div>
-                            )}
+                            </div>
+
+                            <div
+                                className={cn(
+                                    "bg-background rounded-xl h-full",
+                                    language === "glb" ? "p-2 w-[180px]" : "p-0 w-0 hidden"
+                                )}
+                            >
+                                {language === "glb" && (
+                                    <div
+                                        {...getRootProps()}
+                                        className={`border-2 border-dashed rounded-lg
+                                            text-center cursor-pointer transition-colors
+                                            h-full flex flex-col items-center justify-center
+                                            ${uploadedGlbUrl ? "p-2" : "p-4"}
+                                            ${
+                                                isDragActive
+                                                    ? "border-primary bg-primary/10"
+                                                    : "border-muted-foreground/25"
+                                            }
+                                            ${isUploading ? "opacity-50 pointer-events-none" : ""}`}
+                                    >
+                                        <input {...getInputProps()} />
+                                        {isUploading ? (
+                                            <div className="flex items-center justify-center gap-2">
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                <p>Uploading to IPFS...</p>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                {uploadedGlbUrl ? (
+                                                    <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+                                                        <div className="w-full px-2">
+                                                            <p className="text-sm font-medium break-all">
+                                                                Currently Uploaded:
+                                                            </p>
+                                                            <p className="text-sm text-muted-foreground mt-1 break-all">
+                                                                {uploadedGlbUrl}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        <Upload className="w-8 h-8 mb-4 text-muted-foreground" />
+                                                        <p className="text-sm font-medium">
+                                                            Drop GLB file here or click to select
+                                                        </p>
+                                                        <p className="text-xs text-muted-foreground mt-1">
+                                                            Supports .glb files
+                                                        </p>
+                                                    </>
+                                                )}
+                                            </>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                            <Textarea
+                                placeholder="Enter page description"
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
+                                className="h-full bg-background rounded-xl flex-1 resize-none overflow-y-auto"
+                            />
                         </div>
 
-                        <div className="flex-1 min-h-0 border rounded-2xl overflow-auto">
-                            <CodeMirror
-                                value={content}
-                                basicSetup={{
-                                    lineNumbers: true,
-                                    highlightActiveLineGutter: true,
-                                    highlightActiveLine: true,
-                                }}
-                                style={{ height: "100%", minHeight: "100%" }}
-                                height="100%"
-                                extensions={[getEditorExtension()]}
-                                theme={oneDark}
-                                onChange={(val) => setContent(val)}
-                            />
+                        <div className="flex-1 min-h-0 rounded-2xl overflow-hidden">
+                            {isEditorLoading ? (
+                                <div className="w-full h-full bg-background rounded-2xl animate-pulse">
+                                    <div className="flex h-full">
+                                        {/* Line numbers skeleton */}
+                                        <div className="w-[50px] h-full bg-muted/50 border-r border-muted-foreground/20">
+                                            <div className="flex flex-col gap-2 p-4">
+                                                {[...Array(15)].map((_, i) => (
+                                                    <div
+                                                        key={i}
+                                                        className="w-5 h-4 bg-muted-foreground/20 rounded"
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+                                        {/* Code content skeleton */}
+                                        <div className="flex-1 p-4">
+                                            <div className="flex flex-col gap-2">
+                                                {[...Array(15)].map((_, i) => (
+                                                    <div
+                                                        key={i}
+                                                        className={cn(
+                                                            "h-4 bg-muted-foreground/20 rounded",
+                                                            i % 3 === 0
+                                                                ? "w-[80%]"
+                                                                : i % 3 === 1
+                                                                ? "w-[60%]"
+                                                                : "w-[40%]"
+                                                        )}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <CodeMirror
+                                    value={content}
+                                    basicSetup={{
+                                        lineNumbers: true,
+                                        highlightActiveLineGutter: true,
+                                        highlightActiveLine: true,
+                                    }}
+                                    style={{ height: "100%", minHeight: "100%" }}
+                                    height="100%"
+                                    extensions={[getEditorExtension()]}
+                                    theme={oneDark}
+                                    onChange={(val) => setContent(val)}
+                                />
+                            )}
                         </div>
                     </div>
                 </CardContent>

@@ -4,7 +4,7 @@ import { getRandomColor } from "@/utils";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Circle } from "lucide-react";
-
+import { useSquareStore } from "@/stores/useSquareStore";
 interface ContentCardProps {
     image: string | null;
     name: string;
@@ -29,6 +29,7 @@ export function ContentCard({
     scaledSize,
 }: ContentCardProps) {
     const [randomColor] = useState(getRandomColor());
+    const { totalSupply } = useSquareStore();
 
     if (loading) {
         return (
@@ -46,6 +47,8 @@ export function ContentCard({
             </div>
         );
     }
+
+    console.log(totalSupply);
 
     return (
         <div className="relative w-full h-full p-1 group">
@@ -98,10 +101,10 @@ export function ContentCard({
             >
                 <Circle className="text-primary fill-primary" size={scaledSize * 0.03} />
                 <h3
-                    className="text-primary font-bold"
+                    className={cn("text-primary font-bold")}
                     style={{ fontSize: `${scaledSize * 0.025}px` }}
                 >
-                    {index}
+                    {index > totalSupply ? "0" : index}
                 </h3>
             </div>
             <div className="absolute bottom-0 right-0 p-2 items-baseline leading-none w-[80%]">
