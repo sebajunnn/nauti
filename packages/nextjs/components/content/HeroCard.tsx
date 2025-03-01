@@ -97,7 +97,7 @@ export function HeroCard({ fontSize, scale }: HeroCardProps) {
                                 and the Golden Ratio
                             </h3>
                         </div>
-                        <footer className="flex flex-row items-center justify-between w-full px-4 py-4">
+                        <footer className="flex flex-row items-center justify-between w-full px-4 py-3">
                             <div className="flex flex-row items-center justify-start gap-2">
                                 <Circle className="text-foreground fill-foreground" size={14} />
                                 <h4 className="text-base font-medium">issue: 001</h4>
