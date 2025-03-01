@@ -57,8 +57,8 @@ export function Navbar() {
                                     className={cn(
                                         "flex items-center gap-2 h-8",
                                         "pl-4 pr-3",
-                                        "bg-background hover:bg-chart-1",
-                                        "text-black hover:text-foreground",
+                                        "bg-background hover:bg-chart-2",
+                                        "text-black hover:text-foreground/90",
                                         "transition-colors duration-200 ease-in-out"
                                     )}
                                     onClick={handleReset}

@@ -2,12 +2,11 @@
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { GoldenSquareContainer } from "@/components/GoldenSpiral/GoldenSquareContainer";
-import { cn, debounce } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { SpiralSquare, Vector, goldenSpiralConstants } from "@/types/golden-spiral";
 import { useSpiralStore } from "@/stores/useSpiralStore";
 import { useSquareStore } from "@/stores/useSquareStore";
 import { ContentModal } from "@/components/content/ContentModal";
-import { getTotalSupply } from "@/app/actions/content";
 
 interface ModalData {
     content: string;
@@ -216,6 +215,15 @@ export default function GoldenSpiral({ className }: { className?: string }) {
         const now = performance.now();
         if (now - lastWheelTime.current < 16) return;
         lastWheelTime.current = now;
+
+        // Only sync scales if this is the first scroll after a scale change
+        if (
+            Math.abs(targetScale.current - scale) > 0.0001 &&
+            Math.abs(scaleRef.current - scale) > 0.0001
+        ) {
+            targetScale.current = scale;
+            scaleRef.current = scale;
+        }
 
         const scaleFactor = e.deltaY > 0 ? 0.9 : 1.1;
         const newTargetScale = targetScale.current * scaleFactor;
