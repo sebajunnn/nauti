@@ -9,17 +9,21 @@ export function SearchInput({ className }: { className?: string }) {
     const { totalSupply } = useSquareStore();
     const [error, setError] = useState<string | null>(null);
 
+    const validateValue = (value: number | string): string | null => {
+        if (typeof value === "string" && value === "") return null;
+        const numValue = typeof value === "string" ? parseInt(value) : value;
+
+        if (isNaN(numValue)) return "Please enter a valid number";
+        if (numValue < 0) return "ID cannot be negative";
+        if (numValue > totalSupply + 1)
+            return `ID must be less than or equal to ${totalSupply + 1}`;
+        return null;
+    };
+
     const validateAndSearch = (value: number) => {
-        if (isNaN(value)) {
-            setError("Please enter a valid number");
-            return;
-        }
-        if (value < 0) {
-            setError("ID cannot be negative");
-            return;
-        }
-        if (value >= totalSupply) {
-            setError(`ID must be less than ${totalSupply}`);
+        const validationError = validateValue(value);
+        if (validationError) {
+            setError(validationError);
             return;
         }
 
@@ -35,7 +39,7 @@ export function SearchInput({ className }: { className?: string }) {
                 type="number"
                 placeholder="... id"
                 className={cn(
-                    "w-full h-full px-3 py-2 rounded-full bg-background/50",
+                    "w-full h-full px-3 pr-8 py-2 rounded-full bg-background/50",
                     "hover:bg-background/90 hover:text-foreground transition-colors",
                     "duration-200 text-white placeholder:text-background",
                     "hover:placeholder:text-foreground/80",
@@ -44,18 +48,7 @@ export function SearchInput({ className }: { className?: string }) {
                     error ? "focus:ring-red-500 ring-2 ring-red-500" : "focus:ring-primary"
                 )}
                 onChange={(e) => {
-                    const value = parseInt(e.target.value);
-                    if (e.target.value === "") {
-                        setError(null);
-                    } else if (isNaN(value)) {
-                        setError("Please enter a valid number");
-                    } else if (value < 0) {
-                        setError("ID cannot be negative");
-                    } else if (value > totalSupply) {
-                        setError(`ID must be less than ${totalSupply}`);
-                    } else {
-                        setError(null);
-                    }
+                    setError(validateValue(e.target.value));
                 }}
                 onKeyDown={(e) => {
                     if (e.key === "Enter") {
@@ -77,7 +70,7 @@ export function SearchInput({ className }: { className?: string }) {
                 <Search size={16} />
             </button>
             {/* {error && (
-                <div className="absolute bottom-0 right-0 text-base text-red-500 font-medium">
+                <div className="absolute bottom-0 right-0 text-lg text-red-500 font-medium">
                     {error}
                 </div>
             )} */}
