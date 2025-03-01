@@ -52,8 +52,6 @@ export function ContentCard({
         );
     }
 
-    console.log(totalSupply);
-
     return (
         <div className="relative w-full h-full p-1 group">
             <div className="w-full h-full">

@@ -39,7 +39,7 @@ export const useSquareStore = create<SquareStoreState>((set, get) => ({
         try {
             const totalSupply = await getTotalSupply();
             set({ totalSupply });
-            console.log("totalSupply", totalSupply);
+            // console.log("totalSupply", totalSupply);
             return totalSupply;
         } catch (error) {
             console.error("Error fetching total supply:", error);
@@ -62,11 +62,11 @@ export const useSquareStore = create<SquareStoreState>((set, get) => ({
                 actualIndex = baseIndex + (patternLength - 1) * (zoomDepth + 1);
             }
 
-            console.log(
-                `Square ${id} is now ${
-                    isVisible ? "visible" : "hidden"
-                }. Fetching new index ${actualIndex}`
-            );
+            // console.log(
+            //     `Square ${id} is now ${
+            //         isVisible ? "visible" : "hidden"
+            //     }. Fetching new index ${actualIndex}`
+            // );
             state.squareMap.set(id, { isVisible, index: actualIndex });
             return { squareMap: state.squareMap };
         }),
@@ -82,15 +82,15 @@ export const useSquareStore = create<SquareStoreState>((set, get) => ({
                     // const baseIndex = squareState.index % squareCount;
                     const actualIndex = squareId + (patternLength - 1) * zoomDepth;
 
-                    console.log(
-                        `Square ${squareId} (${
-                            squareState.isVisible ? "visible" : "hidden"
-                        }) updating to index ${actualIndex}`
-                    );
-                    state.squareMap.set(squareId, {
-                        ...squareState,
-                        index: actualIndex,
-                    });
+                    // console.log(
+                    //     `Square ${squareId} (${
+                    //         squareState.isVisible ? "visible" : "hidden"
+                    //     }) updating to index ${actualIndex}`
+                    // );
+                    // state.squareMap.set(squareId, {
+                    //     ...squareState,
+                    //     index: actualIndex,
+                    // });
                 }
             });
 
