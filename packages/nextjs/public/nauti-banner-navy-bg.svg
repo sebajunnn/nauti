@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="uuid-f7d26774-35f0-454a-a861-0fc0bb480550" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 550 200">
+  <defs>
+    <style>
+      .uuid-b3c6ec23-a258-4346-a14a-6db2d5c7e591 {
+        font-family: Redaction20-Bold, 'Redaction 20';
+        font-size: 120px;
+        font-weight: 700;
+      }
+
+      .uuid-b3c6ec23-a258-4346-a14a-6db2d5c7e591, .uuid-fe03e086-411d-4863-a2c1-7ad055a59a95 {
+        fill: #031130;
+      }
+
+      .uuid-b5ebe9ba-cda2-4e50-944c-333a97ab5efa {
+        letter-spacing: 0em;
+      }
+
+      .uuid-dd0ea97f-b443-4955-a043-57325d03e9c7 {
+        fill: #fff;
+      }
+
+      .uuid-f6f4d3bd-611d-4bac-babd-d1a3ac1f0deb {
+        letter-spacing: -.02em;
+      }
+    </style>
+  </defs>
+  <g id="uuid-d5348a1d-5e97-43a1-a552-6111fbf6f475" data-name="Layer 1">
+    <rect class="uuid-dd0ea97f-b443-4955-a043-57325d03e9c7" width="550" height="200"/>
+    <text class="uuid-b3c6ec23-a258-4346-a14a-6db2d5c7e591" transform="translate(175.87 141.1)"><tspan class="uuid-f6f4d3bd-611d-4bac-babd-d1a3ac1f0deb" x="0" y="0">N</tspan><tspan class="uuid-b5ebe9ba-cda2-4e50-944c-333a97ab5efa" x="93.6" y="0">auti</tspan></text>
+  </g>
+  <g id="uuid-7702e015-7c14-4ca3-8de8-4ff0147afc40" data-name="Layer 2">
+    <polygon class="uuid-fe03e086-411d-4863-a2c1-7ad055a59a95" points="123.23 78.72 123.23 64.89 105.15 64.89 105.15 53.19 70.04 53.19 70.04 67.02 48.77 67.02 48.77 82.98 41.32 82.98 41.32 100 36 100 36 123.4 48.77 123.4 48.77 135.11 64.72 135.11 64.72 138.3 64.72 146.81 83.87 146.81 83.87 129.79 76.43 129.79 76.43 126.6 71.11 126.6 71.11 118.09 64.72 118.09 64.72 102.13 68.98 102.13 68.98 86.17 77.49 86.17 77.49 74.47 91.32 74.47 91.32 85.11 106.21 85.11 106.21 103.19 100.89 103.19 100.89 110.64 95.57 110.64 95.57 103.19 92.38 103.19 92.38 92.55 80.68 92.55 80.68 103.19 76.43 103.19 76.43 115.79 82.05 115.79 82.05 121.28 86 121.28 86 124.47 91.32 124.47 91.32 131.91 113.66 131.91 113.66 126.6 126.43 126.6 126.43 108.51 136 108.51 136 78.72 123.23 78.72"/>
+  </g>
+</svg>
