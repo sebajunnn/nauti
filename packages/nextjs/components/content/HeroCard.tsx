@@ -1,6 +1,8 @@
-import { useRef } from "react";
-import { motion, useMotionValue, useSpring } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { motion, useMotionValue, useSpring, useTime } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { Circle } from "lucide-react";
+import dayjs from "dayjs";
 
 interface HeroCardProps {
     fontSize: number;
@@ -14,6 +16,18 @@ export function HeroCard({ fontSize, scale }: HeroCardProps) {
     const scaleMotion = useSpring(1, { stiffness: 100, damping: 30, mass: 2 });
     const tiltScaleThreshold = 2;
     const tiltAmplitude = 4; // degrees of rotation
+
+    const [time, setTime] = useState<string>(dayjs().format("HH:mm:ss"));
+    const [date, setDate] = useState<string>(dayjs().format("MMM D, YYYY"));
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setTime(dayjs().format("HH:mm:ss"));
+            setDate(dayjs().format("MMM D, YYYY"));
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, []);
 
     function handleMouse(event: React.MouseEvent<HTMLDivElement>) {
         if (!ref.current || scale > tiltScaleThreshold) return;
@@ -70,21 +84,29 @@ export function HeroCard({ fontSize, scale }: HeroCardProps) {
                         )}
                     >
                         <header className="flex flex-row items-center justify-between w-full px-4 py-2">
-                            <h3 className="font-bold" style={{ fontSize: `${fontSize}px` }}>
-                                • issue: 001
-                            </h3>
-                            <h3 className="font-bold" style={{ fontSize: `${fontSize}px` }}>
-                                story: undefined
-                            </h3>
+                            <div className="flex flex-row items-center justify-start gap-2">
+                                <h4 className="text-base font-medium">{time}</h4>
+                            </div>
+                            <h3 className="text-base font-medium">story: Eternal Web3 Magazine</h3>
                         </header>
-                        <div className="flex-1 flex flex-row items-center justify-center overflow-hidden">
-                            <h1 className="text-[100px] w-full font-redaction font-[350]">Nauti</h1>
+                        <div className="flex-1 flex flex-col items-center justify-center overflow-hidden">
+                            <h1 className="text-[100px] w-full font-redaction font-[350]">
+                                Nautilus
+                            </h1>
+                            <h3 className="text-xl font-bold italic font-redaction tracking-wider">
+                                and the Golden Ratio
+                            </h3>
                         </div>
-                        <footer className="flex flex-row items-center justify-between w-full px-4 py-2">
-                            <h4 className="text-base font-bold">by nature</h4>
-                            <h4 className="text-base font-bold text-center absolute left-1/2 -translate-x-1/2">
-                                Eternal Web3 Content
+                        <footer className="flex flex-row items-center justify-between w-full px-4 py-4">
+                            <div className="flex flex-row items-center justify-start gap-2">
+                                <Circle className="text-foreground fill-foreground" size={14} />
+                                <h4 className="text-base font-medium">issue: 001</h4>
+                            </div>
+
+                            <h4 className="text-base font-medium text-center absolute left-1/2 -translate-x-1/2">
+                                by Nature
                             </h4>
+                            <h4 className="text-base font-medium">{date}</h4>
                         </footer>
                     </div>
                 </div>

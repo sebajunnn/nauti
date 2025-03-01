@@ -286,7 +286,7 @@ export default function PageCreate() {
                         <Button
                             onClick={createPage}
                             disabled={isLoading}
-                            className="min-w-[160px] h-7 px-1 rounded-xl hover:bg-chart-3 hover:text-white"
+                            className="min-w-[160px] bg-chart-4 h-7 px-1 rounded-xl hover:bg-chart-3 hover:text-white"
                         >
                             {isLoading ? (
                                 <div className="flex items-center gap-2">

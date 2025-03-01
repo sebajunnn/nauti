@@ -108,10 +108,10 @@ export function ContentCard({
                     className={cn("text-primary font-bold")}
                     style={{ fontSize: `${scaledSize * 0.025}px` }}
                 >
-                    {index > totalSupply ? "0" : index}
+                    i: {index > totalSupply ? "0" : index}
                 </h3>
             </div>
-            <div className="absolute bottom-0 right-0 p-2 items-baseline leading-none w-[80%]">
+            <div className="absolute top-0 right-0 p-2 items-baseline leading-none w-[80%]">
                 <h3
                     className="text-primary text-right font-bold"
                     style={{ fontSize: `${scaledSize * 0.025}px` }}

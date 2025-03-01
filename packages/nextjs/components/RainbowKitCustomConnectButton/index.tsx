@@ -84,7 +84,7 @@ export const RainbowKitCustomConnectButton = () => {
                                                     className={`
                                                         flex items-center h-5 rounded-full
                                                         relative z-10 -ml-3 p-0
-                                                        hover:text-foreground border-0
+                                                        hover:text-white border-0
                                                         focus:outline-none focus:ring-0 focus:border-0
                                                         focus-within:ring-0 focus-within:outline-none
                                                         focus-visible:ring-0 focus-visible:outline-none
@@ -111,7 +111,7 @@ export const RainbowKitCustomConnectButton = () => {
                                                     address={account.address as AddressType}
                                                 />
                                                 <DialogTrigger asChild>
-                                                    <DropdownMenuItem className="rounded-lg">
+                                                    <DropdownMenuItem className="rounded-lg hover:text-white focus:text-white">
                                                         <QrCode className="h-4 w-4 mr-2" />
                                                         View QR Code
                                                     </DropdownMenuItem>

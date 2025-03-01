@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, X, Maximize2, Minimize2 } from "lucide-react";
+import { Loader2, X, Maximize2, Minimize2, Menu, Share2, Download, Info } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 import {
     Dialog,
@@ -77,9 +78,80 @@ export function ContentModal({
                         "flex flex-row px-2 py-0 m-0",
                         "flex-none bg-foreground h-fit",
                         "backdrop-brightness-125 space-y-0",
-                        "relative justify-end"
+                        "relative justify-between"
                     )}
                 >
+                    <div className="flex items-center gap-1">
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant="destructive"
+                                    className={cn(
+                                        "rounded-full aspect-square h-5",
+                                        "p-1 min-w-0 bg-accent text-background",
+                                        "hover:bg-primary hover:text-accent transition-colors duration-200"
+                                    )}
+                                >
+                                    <Menu className="h-3 w-3" />
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent
+                                className="w-72 bg-foreground text-background rounded-xl border-0"
+                                align="start"
+                                sideOffset={12}
+                            >
+                                {description && (
+                                    <div className="mb-3 px-2">
+                                        <h4 className="text-sm font-medium mb-1">Description</h4>
+                                        <p className="text-sm text-muted-foreground">
+                                            {description}
+                                        </p>
+                                    </div>
+                                )}
+                                <div className="mb-3 px-2">
+                                    <h4 className="text-sm font-medium mb-1">More Metadata</h4>
+                                    <p className="text-sm text-muted-foreground">...</p>
+                                </div>
+                                <div className="flex flex-row gap-1">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="w-full justify-start gap-2 rounded-xl"
+                                        onClick={() => {}}
+                                    >
+                                        <Share2 className="h-4 w-4" />
+                                        Share
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="w-full justify-start gap-2 rounded-xl"
+                                        onClick={() => {}}
+                                    >
+                                        <Download className="h-4 w-4" />
+                                        Download
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="w-full justify-start gap-2 rounded-xl"
+                                        onClick={() => {}}
+                                    >
+                                        <Info className="h-4 w-4" />
+                                        Details
+                                    </Button>
+                                </div>
+                            </PopoverContent>
+                        </Popover>
+                        <div
+                            className={cn(
+                                "flex items-center bg-background/50 rounded-full px-3",
+                                "text-sm font-medium text-background/90 font-rubik h-5"
+                            )}
+                        >
+                            id: {pageId}
+                        </div>
+                    </div>
                     <DialogTitle
                         className={cn(
                             "text-base text-background/80 leading-8",
@@ -97,19 +169,12 @@ export function ContentModal({
                             "gap-1 flex-shrink-0 py-2"
                         )}
                     >
-                        <div
-                            className={cn(
-                                "flex items-center bg-background/30 rounded-full px-3",
-                                "text-sm font-medium text-background/90 font-rubik h-5"
-                            )}
-                        >
-                            id: {pageId}
-                        </div>
                         <Button
                             className={cn(
                                 "rounded-full aspect-square h-5",
-                                "p-1 min-w-0 bg-accent text-background",
-                                "hover:bg-accent/60 transition-colors duration-200"
+                                "p-1 min-w-0 bg-chart-2 text-chart-4",
+                                "hover:bg-chart-4 transition-colors duration-200",
+                                "hover:text-chart-2"
                             )}
                             onClick={() => setIsFullscreen(!isFullscreen)}
                         >
@@ -121,7 +186,12 @@ export function ContentModal({
                         </Button>
                         <Button
                             variant="destructive"
-                            className={cn("rounded-full aspect-square h-5", "p-1 min-w-0")}
+                            className={cn(
+                                "rounded-full aspect-square h-5",
+                                "p-1 min-w-0 bg-chart-5 text-white",
+                                "hover:bg-chart-1 transition-colors duration-200",
+                                "hover:text-chart-5"
+                            )}
                             onClick={() => {
                                 onOpenChange(false);
                             }}
